@@ -1,7 +1,7 @@
 // <lol-spell>：一個技能或被動：圖示、名稱、數值、描述。
 import { css, html, LitElement, nothing } from 'lit';
 import { corpusUrl } from '../data.ts';
-import type { Ability, SourceRef, Spell } from '../types.ts';
+import type { Ability, PracticeState, SourceRef, Spell } from '../types.ts';
 import { define } from './define.ts';
 import { themeStyles } from './styles.ts';
 import './trilingual.ts';
@@ -12,6 +12,7 @@ export class LolSpell extends LitElement {
     slotLabel: { attribute: 'slot-label' },
     source: { attribute: false },
     mode: {},
+    practice: { attribute: false },
   };
 
   static styles = [
@@ -68,6 +69,7 @@ export class LolSpell extends LitElement {
   declare slotLabel: string | undefined;
   declare source: SourceRef | undefined;
   declare mode: 'read' | 'practice';
+  declare practice: PracticeState | undefined;
 
   constructor() {
     super();
@@ -95,7 +97,7 @@ export class LolSpell extends LitElement {
           <lol-trilingual class="name" .text=${a.name} context="name" .source=${this.source} compact></lol-trilingual>
         </div>
         ${this.stats()}
-        <lol-trilingual .text=${a.description} .source=${this.source} .mode=${this.mode} collectable></lol-trilingual>
+        <lol-trilingual .text=${a.description} .source=${this.source} .mode=${this.mode} .practice=${this.practice} collectable></lol-trilingual>
       </div>
     </div>`;
   }

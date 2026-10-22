@@ -30,6 +30,11 @@ describe('排程（自動評分對應）', () => {
     expect(new Date(second.card.fsrs.due).getTime()).toBeGreaterThan(later.getTime() + DAY);
   });
 
+  it('練習寫錯記下的紀錄會標成 practice', () => {
+    const { log } = scheduleReview(fresh(), { rating: 1, mode: 'cloze', hinted: false, source: 'practice' }, NOW);
+    expect(log.source).toBe('practice');
+  });
+
   it('作答結果存回卡片，並寫一筆複習紀錄', async () => {
     const store = new LearningStore(new IDBFactory());
     await store.putCard(fresh());

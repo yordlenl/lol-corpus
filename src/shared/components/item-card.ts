@@ -1,7 +1,7 @@
 // <lol-item-card>：一件裝備的圖示、名稱、價格、簡介與完整描述。
 import { css, html, LitElement, nothing } from 'lit';
 import { corpusUrl } from '../data.ts';
-import type { Item, SourceRef } from '../types.ts';
+import type { Item, PracticeState, SourceRef } from '../types.ts';
 import { define } from './define.ts';
 import { themeStyles } from './styles.ts';
 import './trilingual.ts';
@@ -10,6 +10,7 @@ export class LolItemCard extends LitElement {
   static properties = {
     item: { attribute: false },
     mode: {},
+    practice: { attribute: false },
   };
 
   static styles = [
@@ -46,6 +47,8 @@ export class LolItemCard extends LitElement {
 
   declare item: Item | undefined;
   declare mode: 'read' | 'practice';
+  /** 練習模式：挖空在描述上 */
+  declare practice: PracticeState | undefined;
 
   constructor() {
     super();
@@ -66,9 +69,9 @@ export class LolItemCard extends LitElement {
         </div>
       </div>
       ${hasPlain
-        ? html`<lol-trilingual class="plain" .text=${item.plaintext} .source=${source} .mode=${this.mode} collectable></lol-trilingual>`
+        ? html`<lol-trilingual class="plain" .text=${item.plaintext} .source=${source} collectable></lol-trilingual>`
         : nothing}
-      <lol-trilingual .text=${item.description} .source=${source} .mode=${this.mode} collectable></lol-trilingual>
+      <lol-trilingual .text=${item.description} .source=${source} .mode=${this.mode} .practice=${this.practice} collectable></lol-trilingual>
     `;
   }
 }

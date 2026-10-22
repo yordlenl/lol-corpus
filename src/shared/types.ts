@@ -298,6 +298,8 @@ export interface ReviewLog {
   wasNew?: boolean;
   /** 這次作答後排定的下次複習時間 */
   nextDue?: string;
+  /** practice：練習寫錯自動記的（不算進首頁正確率） */
+  source?: 'review' | 'practice';
 }
 
 /** 一次作答的結果 */
@@ -306,6 +308,8 @@ export interface ReviewOutcome {
   /** 練習方式，例如 word（看釋義寫單字） */
   mode: string;
   hinted: boolean;
+  /** practice：練習寫錯自動記的；沒寫就是複習 */
+  source?: 'review' | 'practice';
 }
 
 export interface Settings {
@@ -320,6 +324,56 @@ export interface ExportFile {
   cards: StudyCard[];
   reviewLogs: ReviewLog[];
   settings: Settings;
+}
+
+// ---------- 練習 ----------
+
+/** 挖空的一個空格 */
+export interface PracticeBlank {
+  /** 英文裡第幾個字（只數單字，從 0 開始） */
+  index: number;
+  answer: string;
+  /** 目前填的字 */
+  value: string;
+  /** 送出後的對錯 */
+  result?: 'right' | 'wrong';
+}
+
+/** 元件練習模式的狀態：哪些字挖空、填了什麼、送出了沒 */
+export interface PracticeState {
+  blanks: PracticeBlank[];
+  revealed: boolean;
+}
+
+/** 點空格時發出的事件內容（事件名稱 lol-blank） */
+export interface BlankEventDetail {
+  index: number;
+  anchor: { left: number; top: number; right: number; bottom: number };
+}
+
+export interface WordMark {
+  /** 正確答案裡的這個字（原樣，含標點） */
+  word: string;
+  ok: boolean;
+}
+
+export interface WordDiff {
+  correct: boolean;
+  /** 正確答案逐字標示：寫對 ok=true，漏寫或寫錯 ok=false */
+  expected: WordMark[];
+  /** 你多寫、或寫錯而對不上的字 */
+  extra: string[];
+}
+
+/** 評分規則（spec） */
+export interface GradeApi {
+  normalizeAnswer(text: string): string;
+  isCorrect(answer: string, accepted: string[]): boolean;
+  ratingFor(correct: boolean, hinted: boolean): 1 | 2 | 3;
+  hintText(answer: string, level: number): string;
+  sentenceHint(sentence: string, level: number): string;
+  wordsOf(sentence: string): string[];
+  diffWords(expected: string, answer: string): WordDiff;
 }
 
 // ---------- 共用模組的介面（學習 App 照這個呼叫） ----------
@@ -376,4 +430,11 @@ export interface SharedModule {
   recordReview(card: StudyCard, outcome: ReviewOutcome, now?: Date): Promise<{ card: StudyCard; log: ReviewLog }>;
   /** 把一段文字拆成可以收藏的句子 */
   sentenceUnits(text: Tri<Rich>): SentenceUnit[];
+  grade: GradeApi;
+  /** 挖空要挖哪幾個字（英文裡第幾個字） */
+  planCloze(text: Rich): Promise<number[]>;
+  /** 英文裡第幾個字的原樣文字 */
+  wordAt(text: Rich, index: number): string;
+  /** 第幾個字所在的那一句（寫錯時收進句子庫用）；找不到回傳 null */
+  unitForWord(text: Tri<Rich>, index: number): SentenceUnit | null;
 }

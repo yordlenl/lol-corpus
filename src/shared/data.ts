@@ -43,6 +43,8 @@ export const loadRunes = () => load<RuneData>('runes.json');
 export const loadSummoners = () => load<SummonerSpell[]>('summoners.json');
 export const loadWordlists = () => load<Wordlists>('wordlists.json');
 export const loadDictionary = () => load<Dictionary>('dict.json');
+/** 專有名詞（英文，長的在前），挖空時避開 */
+export const loadNames = () => load<string[]>('names.json');
 
 /** 測試用：改資料來源、清掉記住的資料 */
 export function setCorpusBase(url: string) {

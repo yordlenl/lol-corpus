@@ -2,7 +2,7 @@
 import { css, html, LitElement, nothing } from 'lit';
 import { collection } from '../collection.ts';
 import { sentenceCardId } from '../db.ts';
-import type { Lang, Quote, SourceRef } from '../types.ts';
+import type { Lang, PracticeState, Quote, SourceRef } from '../types.ts';
 import { define } from './define.ts';
 import { themeStyles } from './styles.ts';
 import './trilingual.ts';
@@ -16,6 +16,7 @@ export class LolQuote extends LitElement {
   static properties = {
     quote: { attribute: false },
     mode: {},
+    practice: { attribute: false },
     state: { state: true },
   };
 
@@ -67,6 +68,7 @@ export class LolQuote extends LitElement {
 
   declare quote: Quote | undefined;
   declare mode: 'read' | 'practice';
+  declare practice: PracticeState | undefined;
   declare state: 'idle' | 'loading' | 'playing' | 'error';
 
   constructor() {
@@ -131,6 +133,8 @@ export class LolQuote extends LitElement {
     for (const lang of ['zh_TW', 'zh_CN'] as const) {
       if (q.translation[lang] === 'learning') badges[lang] = '學習譯文';
     }
+    // 挖空時不能播原聲、不顯示來源（會洩漏答案）
+    const practicing = this.mode === 'practice' && !this.practice?.revealed;
     // 非語言聲音、虛構語言沒有英文可以練，不能收
     const canCollect = this.mode === 'read' && !q.nonverbal && !q.fictionalLanguage;
     const collected = collection.has(sentenceCardId(source, q.text.en));
@@ -140,8 +144,8 @@ export class LolQuote extends LitElement {
         <span class="event">${EVENT_LABELS[q.event] ?? q.event}</span>
         ${q.nonverbal ? html`<span class="badge">非語言聲音</span>` : nothing}
         ${q.fictionalLanguage ? html`<span class="badge">虛構語言</span>` : nothing}
-        ${q.audio.en ? html`<button type="button" @click=${this.toggle}>${playLabel}</button>` : nothing}
-        <a href=${q.source} target="_blank" rel="noopener">來源</a>
+        ${q.audio.en && !practicing ? html`<button type="button" @click=${this.toggle}>${playLabel}</button>` : nothing}
+        ${practicing ? nothing : html`<a href=${q.source} target="_blank" rel="noopener">來源</a>`}
         ${canCollect
           ? html`<button class="collect" type="button" ?disabled=${collected} @click=${this.collect}>
               ${collected ? '已收藏句子' : '＋ 收藏句子'}
@@ -153,6 +157,7 @@ export class LolQuote extends LitElement {
         .badges=${badges}
         .source=${source}
         .mode=${this.mode}
+        .practice=${this.practice}
         .wordsClickable=${!q.nonverbal && !q.fictionalLanguage}
       ></lol-trilingual>
       ${this.state === 'error' ? html`<div class="error">原聲暫時無法播放（需要網路連線）</div>` : nothing}

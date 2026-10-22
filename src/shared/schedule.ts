@@ -21,6 +21,7 @@ export function scheduleReview<T extends StudyCard>(card: T, outcome: ReviewOutc
     hinted: outcome.hinted,
     wasNew: card.fsrs.state === STATE_NEW,
     nextDue: next.fsrs.due,
+    ...(outcome.source ? { source: outcome.source } : {}),
   };
   return { card: next, log };
 }

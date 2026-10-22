@@ -117,6 +117,23 @@ async function main() {
   const spells = buildSummoners({ en: summoners.en.data, zh_TW: summoners.zh_TW.data, zh_CN: summoners.zh_CN.data }, onUnknownTag);
   await writeData('summoners.json', spells);
 
+  // 專有名詞清單（英文）：挖空時整個名稱都不挖。長的排前面，比對時先吃掉長名稱。
+  const names = new Set<string>();
+  for (const c of champions) {
+    names.add(c.name.en);
+    names.add(c.passive.name.en);
+    for (const sp of c.spells) names.add(sp.name.en);
+  }
+  for (const it of builtItems) names.add(it.name.en);
+  for (const tree of runes.trees) {
+    names.add(tree.name.en);
+    for (const r of tree.slots.flat()) names.add(r.name.en);
+  }
+  for (const s of spells) names.add(s.name.en);
+  // 變身英雄的技能名寫成「A / B」或「A | B」，拆成兩個名稱
+  const nameList = [...names].flatMap((n) => n.split(/\s*[/|]\s*/)).map((n) => n.trim()).filter(Boolean);
+  await writeData('names.json', [...new Set(nameList)].sort((a, b) => b.length - a.length || a.localeCompare(b)));
+
   console.log('[3/5] 下載圖示…');
   const icons = new Map<string, string>();
   const cdn = `${DDRAGON}/cdn/${DDRAGON_VERSION}/img`;

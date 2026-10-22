@@ -5,7 +5,17 @@ import { sentenceCardId } from '../db.ts';
 import { sentenceUnits } from '../sentences.ts';
 import { settings } from '../settings.ts';
 import { richToPlain } from '../text.ts';
-import type { Lang, Rich, SentenceUnit, SourceRef, TextContext, Tri, WordEventDetail } from '../types.ts';
+import type {
+  BlankEventDetail,
+  Lang,
+  PracticeState,
+  Rich,
+  SentenceUnit,
+  SourceRef,
+  TextContext,
+  Tri,
+  WordEventDetail,
+} from '../types.ts';
 import { define } from './define.ts';
 import { renderRich } from './rich.ts';
 import type { PickSentenceDetail } from './sentence-picker.ts';
@@ -25,6 +35,7 @@ export class LolTrilingual extends LitElement {
     wordsClickable: { type: Boolean, attribute: 'words-clickable' },
     compact: { type: Boolean, reflect: true },
     collectable: { type: Boolean },
+    practice: { attribute: false },
   };
 
   static styles = [
@@ -70,6 +81,39 @@ export class LolTrilingual extends LitElement {
         justify-content: flex-end;
         margin-top: 6px;
       }
+      .blank {
+        display: inline-block;
+        min-height: 1.6em;
+        margin: 0 2px;
+        padding: 0 6px;
+        font: inherit;
+        line-height: 1.5;
+        color: var(--lol-blank-text, var(--lol-text-strong, inherit));
+        text-align: center;
+        vertical-align: baseline;
+        background: var(--lol-blank-bg, rgba(127, 127, 127, 0.12));
+        border: none;
+        border-bottom: 2px solid var(--lol-accent, currentColor);
+        border-radius: 4px 4px 0 0;
+        cursor: pointer;
+      }
+      .blank.filled {
+        background: var(--lol-blank-filled-bg, rgba(127, 127, 127, 0.2));
+      }
+      .blank.right {
+        color: var(--lol-right, #2b8a6e);
+        border-bottom-color: var(--lol-right, #2b8a6e);
+        cursor: default;
+      }
+      .blank.wrong {
+        color: var(--lol-wrong, #d6455d);
+        border-bottom-color: var(--lol-wrong, #d6455d);
+        cursor: default;
+      }
+      .blank.wrong .answer {
+        font-weight: 700;
+        color: var(--lol-right, #2b8a6e);
+      }
     `,
   ];
 
@@ -85,6 +129,8 @@ export class LolTrilingual extends LitElement {
   declare compact: boolean;
   /** 顯示「收藏句子」按鈕（要有 source） */
   declare collectable: boolean;
+  /** 練習模式的空格（mode 為 practice 時） */
+  declare practice: PracticeState | undefined;
 
   /** 這段可以收藏的句子（text 變了才重算） */
   private units: SentenceUnit[] = [];
@@ -144,6 +190,15 @@ export class LolTrilingual extends LitElement {
 
   private onClick(event: Event) {
     const target = event.target as HTMLElement;
+    if (target.classList?.contains('blank') && target.dataset.index != null) {
+      const rect = target.getBoundingClientRect();
+      const detail: BlankEventDetail = {
+        index: Number(target.dataset.index),
+        anchor: { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom },
+      };
+      this.dispatchEvent(new CustomEvent('lol-blank', { detail, bubbles: true, composed: true }));
+      return;
+    }
     if (!target.classList?.contains('w') || !this.text) return;
     const rect = target.getBoundingClientRect();
     const detail: WordEventDetail = {
@@ -162,10 +217,19 @@ export class LolTrilingual extends LitElement {
     if (!this.text) return nothing;
     const visible = LANGS.filter((lang) => settings.current.rows[lang]);
     // 每一行用 white-space: pre-line 顯示換行，所以 <div> 裡不能有多餘的空白或換行
+    const practicing = this.mode === 'practice' && this.practice;
+    // 練習中英文一定要顯示；送出前單字不能點（避免查到答案）
+    if (practicing && !visible.includes('en')) visible.unshift('en');
+    const blanks = practicing ? new Map(this.practice!.blanks.map((b) => [b.index, b])) : undefined;
     return html`${visible.map((lang) => {
-      const clickable = lang === 'en' && this.wordsClickable ? { context: this.context } : null;
+      const canClick = this.wordsClickable && (!practicing || this.practice!.revealed);
+      const options =
+        lang !== 'en'
+          ? null
+          : { clickable: canClick ? { context: this.context } : null, blanks, revealed: this.practice?.revealed };
+      const listen = lang === 'en' && (canClick || practicing);
       const badge = this.badges?.[lang] ? html`<span class="badge">${this.badges[lang]}</span>` : nothing;
-      return html`<div class="row ${lang}" lang=${HTML_LANG[lang]} @click=${clickable ? this.onClick : nothing}>${renderRich(this.text![lang], clickable)}${badge}</div>`;
+      return html`<div class="row ${lang}" lang=${HTML_LANG[lang]} @click=${listen ? this.onClick : nothing}>${renderRich(this.text![lang], options)}${badge}</div>`;
     })}${this.tools()}`;
   }
 }

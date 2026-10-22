@@ -10,11 +10,14 @@ import { collection } from './collection.ts';
 import { loadWordlists } from './data.ts';
 import { LearningStore, removeLegacyProbe } from './db.ts';
 import { setWordlists } from './dict.ts';
+import { diffWords, hintText, isCorrect, normalizeAnswer, ratingFor, sentenceHint, wordsOf } from './grade.ts';
 import { recordReviewIn } from './schedule.ts';
 import { settings } from './settings.ts';
-import type { ReviewOutcome, StudyCard } from './types.ts';
+import type { GradeApi, ReviewOutcome, StudyCard } from './types.ts';
 
 export const API_VERSION = 1;
+
+export const grade: GradeApi = { normalizeAnswer, isCorrect, ratingFor, hintText, sentenceHint, wordsOf, diffWords };
 
 export {
   corpusUrl,
@@ -26,6 +29,7 @@ export {
   loadSummoners,
 } from './data.ts';
 export { lookupWord } from './dict.ts';
+export { planCloze, unitForWord, wordAt } from './practice.ts';
 export { sentenceUnits } from './sentences.ts';
 export { collection, settings };
 

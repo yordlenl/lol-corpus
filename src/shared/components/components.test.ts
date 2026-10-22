@@ -90,6 +90,39 @@ describe('<lol-trilingual>', () => {
   });
 });
 
+describe('練習模式', () => {
+  const text = { en: 'Ahri throws the orb forward.', zh_TW: '阿璃丟出幻玉。', zh_CN: '阿狸丢出宝珠。' };
+  const blanks = (extra = {}) => [{ index: 1, answer: 'throws', value: '', ...extra }];
+
+  it('英文換成空格，中文照舊；點空格發出 lol-blank 事件', async () => {
+    const el = await mount('lol-trilingual', { text, mode: 'practice', practice: { blanks: blanks(), revealed: false } });
+    const root = el.shadowRoot!;
+    expect(root.querySelector('.en')!.textContent).not.toContain('throws');
+    expect(root.querySelector('.zh_TW')!.textContent).toContain('阿璃丟出幻玉');
+    expect(root.querySelectorAll('.w')).toHaveLength(0);
+    let index = -1;
+    document.addEventListener('lol-blank', (e) => (index = (e as CustomEvent).detail.index), { once: true });
+    root.querySelector<HTMLButtonElement>('.blank')!.click();
+    expect(index).toBe(1);
+  });
+
+  it('填好的字顯示在空格裡；送出後標出對錯與正確答案', async () => {
+    const filled = await mount('lol-trilingual', { text, mode: 'practice', practice: { blanks: blanks({ value: 'throw' }), revealed: false } });
+    expect(filled.shadowRoot!.querySelector('.blank')!.textContent).toBe('throw');
+    const wrong = await mount('lol-trilingual', { text, mode: 'practice', practice: { blanks: blanks({ value: 'throw', result: 'wrong' }), revealed: true } });
+    const mark = wrong.shadowRoot!.querySelector('.blank.wrong')!;
+    expect(mark.querySelector('s')!.textContent).toBe('throw');
+    expect(mark.querySelector('.answer')!.textContent).toBe('throws');
+    const right = await mount('lol-trilingual', { text, mode: 'practice', practice: { blanks: blanks({ value: 'throws', result: 'right' }), revealed: true } });
+    expect(right.shadowRoot!.querySelector('.blank.right')!.textContent).toBe('throws');
+  });
+
+  it('練習中沒有收藏句子按鈕', async () => {
+    const el = await mount('lol-trilingual', { text, mode: 'practice', collectable: true, source: { type: 'spell', id: 'Ahri/Q' }, practice: { blanks: blanks(), revealed: false } });
+    expect(el.shadowRoot!.querySelector('.collect')).toBeNull();
+  });
+});
+
 describe('<lol-quote>', () => {
   const quote: Quote = {
     id: 'Ahri/base/pick-1',
