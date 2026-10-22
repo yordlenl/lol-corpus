@@ -1,0 +1,168 @@
+/* 語料庫：英雄聯盟客戶端風格（深藍底、金色細邊框） */
+:root {
+  --bg-top: #0a1428;
+  --bg-bottom: #010a13;
+  --panel: rgba(1, 10, 19, 0.72);
+  --gold: #c8aa6e;
+  --gold-dark: #785a28;
+  --gold-light: #f0e6d2;
+  --text: #a09b8c;
+  --text-strong: #f0e6d2;
+  --danger: #e84057;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom)) fixed;
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: calc(32px + env(safe-area-inset-top)) 24px calc(32px + env(safe-area-inset-bottom));
+}
+
+.masthead {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+h1 {
+  margin: 0;
+  color: var(--gold);
+  font-size: 34px;
+  letter-spacing: 0.08em;
+}
+
+.tagline {
+  margin: 4px 0 0;
+  color: var(--text);
+  letter-spacing: 0.12em;
+}
+
+.panel {
+  position: relative;
+  margin-bottom: 20px;
+  padding: 20px 24px;
+  background: var(--panel);
+  border: 1px solid var(--gold-dark);
+}
+
+/* 內側再一條細金線，模仿客戶端的雙層邊框 */
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(200, 170, 110, 0.18);
+  pointer-events: none;
+}
+
+h2 {
+  margin: 0 0 8px;
+  color: var(--gold-light);
+  font-size: 20px;
+  letter-spacing: 0.04em;
+}
+
+h3 {
+  margin: 20px 0 8px;
+  color: var(--gold);
+  font-size: 16px;
+}
+
+p {
+  margin: 0 0 12px;
+}
+
+.hint {
+  font-size: 15px;
+}
+
+.link {
+  color: var(--gold);
+  text-decoration: none;
+  border-bottom: 1px solid var(--gold-dark);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 0 0 16px;
+}
+
+.facts dt {
+  color: var(--text);
+}
+
+.facts dd {
+  margin: 0;
+  color: var(--text-strong);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+button {
+  min-height: 44px;
+  padding: 0 20px;
+  font: inherit;
+  color: var(--gold-light);
+  background: #1e2328;
+  border: 1px solid var(--gold);
+  border-radius: 0;
+  cursor: pointer;
+}
+
+button:active {
+  background: #2c3138;
+}
+
+button.secondary {
+  color: var(--text);
+  border-color: var(--gold-dark);
+}
+
+.marks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.marks li {
+  padding: 8px 0;
+  color: var(--text-strong);
+  border-top: 1px solid rgba(120, 90, 40, 0.4);
+}
+
+.marks li.empty {
+  color: var(--text);
+}
+
+.marks li.error {
+  color: var(--danger);
+}
+
+.build {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: #5b5a56;
+}
