@@ -1,20 +1,28 @@
 {
   "name": "lol-corpus",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && vite build -c vite.shared.config.ts",
     "preview": "vite preview --host",
     "test": "vitest run",
-    "icons": "node scripts/make-icons.mjs"
+    "icons": "node scripts/make-icons.mjs",
+    "data": "node scripts/data/build.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
+    "csv-parse": "^7.0.3",
     "fake-indexeddb": "^6.2.6",
+    "happy-dom": "^21.0.4",
+    "opencc-js": "^1.4.2",
     "typescript": "^7.0.2",
     "vite": "^8.3.5",
     "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "lit": "^3.3.3",
+    "ts-fsrs": "^5.4.2"
   }
 }

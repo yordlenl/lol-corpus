@@ -3,6 +3,7 @@
   --bg-top: #0a1428;
   --bg-bottom: #010a13;
   --panel: rgba(1, 10, 19, 0.72);
+  --panel-hover: rgba(30, 35, 40, 0.9);
   --gold: #c8aa6e;
   --gold-dark: #785a28;
   --gold-light: #f0e6d2;
@@ -10,6 +11,38 @@
   --text-strong: #f0e6d2;
   --danger: #e84057;
   color-scheme: dark;
+
+  /* 給共用元件的顏色 */
+  --lol-text: #cdbe91;
+  --lol-text-strong: #f0e6d2;
+  --lol-muted: #8a8577;
+  --lol-accent: #c8aa6e;
+  --lol-line: #785a28;
+  --lol-en: #f0e6d2;
+  --lol-zh-tw: #cdbe91;
+  --lol-zh-cn: #8a8577;
+  --lol-num: #f0e6d2;
+  --lol-magic: #6aa8f7;
+  --lol-physical: #f5a35c;
+  --lol-true: #ffffff;
+  --lol-heal: #4ccf7e;
+  --lol-shield: #b3bccb;
+  --lol-mana: #5b9bf5;
+  --lol-status: #c79df5;
+  --lol-speed: #e7dca6;
+  --lol-gold: #f3cf5a;
+  --lol-word-hover: rgba(200, 170, 110, 0.28);
+  --lol-button-text: #f0e6d2;
+  --lol-button-bg: #1e2328;
+  --lol-icon-border: #785a28;
+  --lol-popup-bg: #010a13;
+  --lol-popup-text: #cdbe91;
+  --lol-popup-strong: #f0e6d2;
+  --lol-popup-border: #c8aa6e;
+  --lol-popup-radius: 0;
+  --lol-popup-warn-bg: #3a2a0c;
+  --lol-popup-warn-text: #f3cf5a;
+  --lol-badge-radius: 0;
 }
 
 * {
@@ -30,139 +63,404 @@ body {
   line-height: 1.6;
 }
 
-.page {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: calc(32px + env(safe-area-inset-top)) 24px calc(32px + env(safe-area-inset-bottom));
-}
-
-.masthead {
-  text-align: center;
-  margin-bottom: 28px;
-}
-
-h1 {
-  margin: 0;
+a {
   color: var(--gold);
-  font-size: 34px;
-  letter-spacing: 0.08em;
 }
 
-.tagline {
-  margin: 4px 0 0;
+button {
+  font: inherit;
+}
+
+/* ---------- 上方導覽列 ---------- */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  padding: calc(10px + env(safe-area-inset-top)) 24px 10px;
+  background: rgba(1, 10, 19, 0.95);
+  border-bottom: 1px solid var(--gold-dark);
+  backdrop-filter: blur(6px);
+}
+
+.brand {
+  color: var(--gold);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+
+.nav {
+  display: flex;
+  gap: 4px;
+}
+
+.nav a {
+  padding: 8px 14px;
   color: var(--text);
-  letter-spacing: 0.12em;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.nav a.current {
+  color: var(--gold-light);
+  border-color: var(--gold);
+  background: #1e2328;
+}
+
+.toggles {
+  display: flex;
+  gap: 0;
+  margin-left: auto;
+}
+
+.toggle {
+  min-height: 40px;
+  padding: 0 14px;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--gold-dark);
+  cursor: pointer;
+}
+
+.toggle + .toggle {
+  border-left: none;
+}
+
+.toggle.on {
+  color: var(--gold-light);
+  background: #1e2328;
+  border-color: var(--gold);
+}
+
+.toggle:disabled {
+  cursor: not-allowed;
+}
+
+.switch {
+  padding: 8px 0;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ---------- 共通版面 ---------- */
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 24px 40px;
 }
 
 .panel {
   position: relative;
-  margin-bottom: 20px;
-  padding: 20px 24px;
+  display: block;
+  padding: 16px 20px;
   background: var(--panel);
   border: 1px solid var(--gold-dark);
 }
 
-/* 內側再一條細金線，模仿客戶端的雙層邊框 */
-.panel::before {
-  content: '';
-  position: absolute;
-  inset: 3px;
-  border: 1px solid rgba(200, 170, 110, 0.18);
-  pointer-events: none;
+.notice {
+  padding: 24px;
+  text-align: center;
 }
 
-h2 {
-  margin: 0 0 8px;
-  color: var(--gold-light);
-  font-size: 20px;
-  letter-spacing: 0.04em;
+.section-title {
+  margin: 28px 0 12px;
+  color: var(--gold);
+  font-size: 18px;
+  letter-spacing: 0.06em;
 }
 
-h3 {
+.mini-title {
   margin: 20px 0 8px;
   color: var(--gold);
-  font-size: 16px;
-}
-
-p {
-  margin: 0 0 12px;
-}
-
-.hint {
   font-size: 15px;
 }
 
-.link {
-  color: var(--gold);
-  text-decoration: none;
-  border-bottom: 1px solid var(--gold-dark);
-}
-
-.facts {
+.stack {
   display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 4px 16px;
-  margin: 0 0 16px;
-}
-
-.facts dt {
-  color: var(--text);
-}
-
-.facts dd {
-  margin: 0;
-  color: var(--text-strong);
-}
-
-.actions {
-  display: flex;
   gap: 12px;
-  flex-wrap: wrap;
 }
 
-button {
+.back {
+  display: inline-block;
+  margin-bottom: 12px;
+  text-decoration: none;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.search {
+  width: 100%;
+  max-width: 360px;
   min-height: 44px;
-  padding: 0 20px;
+  padding: 0 14px;
   font: inherit;
   color: var(--gold-light);
-  background: #1e2328;
-  border: 1px solid var(--gold);
+  background: #010a13;
+  border: 1px solid var(--gold-dark);
   border-radius: 0;
+}
+
+.split-main > .search {
+  margin-bottom: 4px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  min-height: 40px;
+  padding: 0 14px;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--gold-dark);
   cursor: pointer;
 }
 
-button:active {
-  background: #2c3138;
+.chip.on {
+  color: var(--gold-light);
+  border-color: var(--gold);
+  background: #1e2328;
 }
 
-button.secondary {
+/* 左邊列表、右邊說明 */
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  gap: 20px;
+  align-items: start;
+}
+
+.split-side {
+  position: sticky;
+  top: 76px;
+  max-height: calc(100vh - 96px);
+  overflow: auto;
+}
+
+@media (max-width: 900px) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+  .split-side {
+    position: static;
+    max-height: none;
+  }
+}
+
+/* ---------- 英雄 ---------- */
+
+.champion-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.champion-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.champion-tile:hover {
+  background: var(--panel-hover);
+  border-color: var(--gold);
+}
+
+.champion-tile img {
+  border: 1px solid var(--gold-dark);
+}
+
+.champion-head {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.champion-head img {
+  border: 1px solid var(--gold);
+}
+
+.champion-name {
+  --lol-en-size: 1.6em;
+  font-weight: 700;
+}
+
+.champion-title {
+  margin-top: 4px;
+}
+
+.skin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.skin {
+  padding: 10px 14px;
+}
+
+/* ---------- 裝備 ---------- */
+
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 8px;
+}
+
+.item-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  color: var(--gold-light);
+  font-size: 13px;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.item-cell img {
+  border: 1px solid var(--gold-dark);
+}
+
+.item-cell.current {
+  border-color: #0ac8b9;
+  background: rgba(10, 200, 185, 0.12);
+}
+
+.item-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.item-tile img {
+  display: block;
+  border: 1px solid var(--gold-dark);
+}
+
+/* ---------- 符文 ---------- */
+
+.tree-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tree-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 8px;
   color: var(--text);
-  border-color: var(--gold-dark);
+  text-decoration: none;
+  border: 1px solid var(--gold-dark);
 }
 
-.marks {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.tree-tab.current {
+  color: var(--gold-light);
+  border-color: var(--gold);
+  background: #1e2328;
 }
 
-.marks li {
-  padding: 8px 0;
-  color: var(--text-strong);
+.tree-name {
+  --lol-en-size: 1.3em;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.rune-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 0;
   border-top: 1px solid rgba(120, 90, 40, 0.4);
 }
 
-.marks li.empty {
+.row-label {
+  flex: 0 0 100%;
+  color: var(--gold);
+  font-size: 14px;
+}
+
+.rune {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 112px;
+  padding: 6px 4px;
   color: var(--text);
-}
-
-.marks li.error {
-  color: var(--danger);
-}
-
-.build {
-  margin-top: 24px;
-  text-align: center;
   font-size: 13px;
+  line-height: 1.3;
+  text-align: center;
+  text-decoration: none;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.rune img {
+  border-radius: 50%;
+  background: #010a13;
+}
+
+.rune.current {
+  color: var(--gold-light);
+  border-color: var(--gold);
+}
+
+.rune-detail-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.rune-icon {
+  border-radius: 50%;
+  background: #010a13;
+}
+
+.detail-name {
+  --lol-en-size: 1.15em;
+  font-weight: 600;
+}
+
+/* ---------- 頁尾 ---------- */
+
+.footer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 24px calc(32px + env(safe-area-inset-bottom));
   color: #5b5a56;
+  font-size: 13px;
+  border-top: 1px solid rgba(120, 90, 40, 0.4);
+}
+
+.footer p {
+  margin: 4px 0;
 }
