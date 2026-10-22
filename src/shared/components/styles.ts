@@ -58,6 +58,23 @@ export const themeStyles = css`
     border-radius: var(--lol-badge-radius, 3px);
     white-space: nowrap;
   }
+  .collect {
+    min-height: 36px;
+    padding: 0 14px;
+    font: inherit;
+    font-size: 0.9em;
+    font-weight: 600;
+    color: var(--lol-button-text, inherit);
+    background: var(--lol-button-bg, transparent);
+    border: 1px solid var(--lol-accent, currentColor);
+    border-radius: var(--lol-button-radius, 0);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .collect:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
   img.icon {
     display: block;
     flex: none;

@@ -95,7 +95,7 @@ export class LolSpell extends LitElement {
           <lol-trilingual class="name" .text=${a.name} context="name" .source=${this.source} compact></lol-trilingual>
         </div>
         ${this.stats()}
-        <lol-trilingual .text=${a.description} .source=${this.source} .mode=${this.mode}></lol-trilingual>
+        <lol-trilingual .text=${a.description} .source=${this.source} .mode=${this.mode} collectable></lol-trilingual>
       </div>
     </div>`;
   }

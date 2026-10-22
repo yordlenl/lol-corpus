@@ -43,6 +43,11 @@
   --lol-popup-warn-bg: #3a2a0c;
   --lol-popup-warn-text: #f3cf5a;
   --lol-badge-radius: 0;
+  --lol-toggle-text: #a09b8c;
+  --lol-toggle-border: #785a28;
+  --lol-toggle-on-text: #f0e6d2;
+  --lol-toggle-on-bg: #1e2328;
+  --lol-toggle-on-border: #c8aa6e;
 }
 
 * {
@@ -114,32 +119,7 @@ button {
 }
 
 .toggles {
-  display: flex;
-  gap: 0;
   margin-left: auto;
-}
-
-.toggle {
-  min-height: 40px;
-  padding: 0 14px;
-  color: var(--text);
-  background: transparent;
-  border: 1px solid var(--gold-dark);
-  cursor: pointer;
-}
-
-.toggle + .toggle {
-  border-left: none;
-}
-
-.toggle.on {
-  color: var(--gold-light);
-  background: #1e2328;
-  border-color: var(--gold);
-}
-
-.toggle:disabled {
-  cursor: not-allowed;
 }
 
 .switch {

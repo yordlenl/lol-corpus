@@ -78,6 +78,19 @@ describe('學習紀錄資料庫', () => {
     expect(again.settings.dailyNew).toBe(15);
   });
 
+  it('同一個備份檔合併兩次，複習紀錄不會重複', async () => {
+    const store = new LearningStore(new IDBFactory());
+    await store.putCard(newWordCard({ word: 'orb', lemma: 'orb', origin: 'corpus' }, NOW));
+    await store.addReviewLog({ cardId: 'word:orb', rating: 3, reviewedAt: NOW.toISOString(), mode: 'word', hinted: false });
+    const file = JSON.parse(JSON.stringify(await store.exportAll()));
+    expect(await store.importAll(file, 'merge')).toEqual({ cards: 1, reviewLogs: 0 });
+    expect(await store.importAll(file, 'merge')).toEqual({ cards: 1, reviewLogs: 0 });
+    expect(await store.listReviewLogs()).toHaveLength(1);
+
+    const other = new LearningStore(new IDBFactory());
+    expect(await other.importAll(file, 'merge')).toEqual({ cards: 1, reviewLogs: 1 });
+  });
+
   it('不是這個網站的備份檔、或格式版本比較新，都拒絕匯入', async () => {
     const store = new LearningStore(new IDBFactory());
     const file = await store.exportAll();

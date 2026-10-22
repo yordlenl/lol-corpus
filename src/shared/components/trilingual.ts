@@ -1,10 +1,15 @@
 // <lol-trilingual>：同一段文字的英文、繁中、簡中三行，依設定個別顯示或隱藏。
-import { css, html, LitElement, nothing } from 'lit';
+import { css, html, LitElement, nothing, type PropertyValues } from 'lit';
+import { collection } from '../collection.ts';
+import { sentenceCardId } from '../db.ts';
+import { sentenceUnits } from '../sentences.ts';
 import { settings } from '../settings.ts';
 import { richToPlain } from '../text.ts';
-import type { Lang, Rich, SourceRef, TextContext, Tri, WordEventDetail } from '../types.ts';
+import type { Lang, Rich, SentenceUnit, SourceRef, TextContext, Tri, WordEventDetail } from '../types.ts';
 import { define } from './define.ts';
 import { renderRich } from './rich.ts';
+import type { PickSentenceDetail } from './sentence-picker.ts';
+import { anchorOf } from './place.ts';
 import { themeStyles } from './styles.ts';
 
 export const LANGS: Lang[] = ['en', 'zh_TW', 'zh_CN'];
@@ -19,6 +24,7 @@ export class LolTrilingual extends LitElement {
     source: { attribute: false },
     wordsClickable: { type: Boolean, attribute: 'words-clickable' },
     compact: { type: Boolean, reflect: true },
+    collectable: { type: Boolean },
   };
 
   static styles = [
@@ -59,6 +65,11 @@ export class LolTrilingual extends LitElement {
       .w.active {
         background: var(--lol-word-hover, rgba(127, 127, 127, 0.22));
       }
+      .tools {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 6px;
+      }
     `,
   ];
 
@@ -72,6 +83,11 @@ export class LolTrilingual extends LitElement {
   declare source: SourceRef | undefined;
   declare wordsClickable: boolean;
   declare compact: boolean;
+  /** 顯示「收藏句子」按鈕（要有 source） */
+  declare collectable: boolean;
+
+  /** 這段可以收藏的句子（text 變了才重算） */
+  private units: SentenceUnit[] = [];
 
   constructor() {
     super();
@@ -79,18 +95,51 @@ export class LolTrilingual extends LitElement {
     this.mode = 'read';
     this.wordsClickable = true;
     this.compact = false;
+    this.collectable = false;
   }
 
-  private onSettings = () => this.requestUpdate();
+  private onChange = () => this.requestUpdate();
 
   connectedCallback() {
     super.connectedCallback();
-    settings.addEventListener('change', this.onSettings);
+    settings.addEventListener('change', this.onChange);
+    collection.addEventListener('change', this.onChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    settings.removeEventListener('change', this.onSettings);
+    settings.removeEventListener('change', this.onChange);
+    collection.removeEventListener('change', this.onChange);
+  }
+
+  protected willUpdate(changed: PropertyValues<this>) {
+    if (changed.has('text') || changed.has('collectable')) {
+      this.units = this.collectable && this.text ? sentenceUnits(this.text) : [];
+    }
+  }
+
+  private async collect(event: Event) {
+    const source = this.source!;
+    if (this.units.length === 1) {
+      await collection.addSentence({ unit: this.units[0], source });
+      return;
+    }
+    const detail: PickSentenceDetail = { units: this.units, source, anchor: anchorOf(event.currentTarget as Element) };
+    this.dispatchEvent(new CustomEvent('lol-pick-sentence', { detail, bubbles: true, composed: true }));
+  }
+
+  private tools() {
+    if (!this.source || !this.units.length || this.mode !== 'read') return nothing;
+    const collected = this.units.filter((u) => collection.has(sentenceCardId(this.source!, u.text.en))).length;
+    const single = this.units.length === 1;
+    const label = single
+      ? collected
+        ? '已收藏句子'
+        : '＋ 收藏句子'
+      : `＋ 收藏句子${collected ? `（已收 ${collected}）` : ''}`;
+    return html`<div class="tools">
+      <button class="collect" type="button" ?disabled=${single && collected === 1} @click=${this.collect}>${label}</button>
+    </div>`;
   }
 
   private onClick(event: Event) {
@@ -102,6 +151,7 @@ export class LolTrilingual extends LitElement {
       key: target.dataset.key ?? '',
       context: this.context,
       sentence: richToPlain(this.text.en),
+      text: { en: richToPlain(this.text.en), zh_TW: richToPlain(this.text.zh_TW), zh_CN: richToPlain(this.text.zh_CN) },
       source: this.source,
       anchor: { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom },
     };
@@ -116,7 +166,7 @@ export class LolTrilingual extends LitElement {
       const clickable = lang === 'en' && this.wordsClickable ? { context: this.context } : null;
       const badge = this.badges?.[lang] ? html`<span class="badge">${this.badges[lang]}</span>` : nothing;
       return html`<div class="row ${lang}" lang=${HTML_LANG[lang]} @click=${clickable ? this.onClick : nothing}>${renderRich(this.text![lang], clickable)}${badge}</div>`;
-    })}`;
+    })}${this.tools()}`;
   }
 }
 

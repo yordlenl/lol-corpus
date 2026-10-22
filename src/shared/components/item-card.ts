@@ -66,9 +66,9 @@ export class LolItemCard extends LitElement {
         </div>
       </div>
       ${hasPlain
-        ? html`<lol-trilingual class="plain" .text=${item.plaintext} .source=${source} .mode=${this.mode}></lol-trilingual>`
+        ? html`<lol-trilingual class="plain" .text=${item.plaintext} .source=${source} .mode=${this.mode} collectable></lol-trilingual>`
         : nothing}
-      <lol-trilingual .text=${item.description} .source=${source} .mode=${this.mode}></lol-trilingual>
+      <lol-trilingual .text=${item.description} .source=${source} .mode=${this.mode} collectable></lol-trilingual>
     `;
   }
 }

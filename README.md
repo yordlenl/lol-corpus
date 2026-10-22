@@ -1,10 +1,10 @@
 # LoL 英語語料庫
 
-把英雄聯盟的遊戲文字（技能、裝備、符文、召喚師技能、選用／禁用台詞）擺成「英文／台服繁中／簡中」三行對照，外觀像遊戲客戶端；點英文單字可以查音標和繁體釋義。和 [學習 App](https://github.com/yordlenl/lol-study) 共用同一份生詞本與複習紀錄。
+把英雄聯盟的遊戲文字（技能、裝備、符文、召喚師技能、選用／禁用台詞）擺成「英文／台服繁中／簡中」三行對照，外觀像遊戲客戶端；點英文單字可以查音標和繁體釋義，並收藏單字或句子到學習 App 複習。第一次打開後會把資料和圖示存進裝置，之後離線也能看（原聲需要網路）。和 [學習 App](https://github.com/yordlenl/lol-study) 共用同一份生詞本與複習紀錄。
 
 - 網址：<https://yordlenl.github.io/lol-corpus/>（iPad 上從主畫面的「LoL 英語」打開，再切到語料庫）
 - 規格：[docs/spec.md](docs/spec.md)
-- 目前進度：第二階段（語料庫資料與基本頁面）
+- 目前進度：第三階段（收藏單字與句子、離線使用）
 
 ## 常用指令
 
@@ -28,7 +28,7 @@
 
 ## 共用模組
 
-`src/shared/` 是兩個專案共用的部分：資料讀取、三行對照與卡片元件（Lit 自訂標籤）、學習紀錄資料庫（格式版本號在 `src/shared/db.ts`）。
+`src/shared/` 是兩個專案共用的部分：資料讀取、三行對照與卡片元件（Lit 自訂標籤）、收藏、拆句、學習紀錄資料庫（格式版本號在 `src/shared/db.ts`）、ts-fsrs 複習排程。
 
 - 語料庫直接使用；建置時另外打包成 `https://yordlenl.github.io/lol-corpus/shared/lol-shared.js` 給學習 App 載入。
 - 對外的型別寫在 `src/shared/types.ts`，發布成 `shared/lol-shared.d.ts`。改了介面之後，在學習 App 執行 `npm run sync-types`。

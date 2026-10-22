@@ -1,13 +1,18 @@
 // 共用模組的入口。語料庫直接 import；建置時另外打包成 shared/lol-shared.js 給學習 App 載入。
 import './components/item-card.ts';
 import './components/quote.ts';
+import './components/row-toggles.ts';
 import './components/spell.ts';
 import './components/trilingual.ts';
+import { installSentencePicker } from './components/sentence-picker.ts';
 import { installWordPopup } from './components/word-popup.ts';
+import { collection } from './collection.ts';
 import { loadWordlists } from './data.ts';
 import { LearningStore, removeLegacyProbe } from './db.ts';
 import { setWordlists } from './dict.ts';
+import { recordReviewIn } from './schedule.ts';
 import { settings } from './settings.ts';
+import type { ReviewOutcome, StudyCard } from './types.ts';
 
 export const API_VERSION = 1;
 
@@ -21,13 +26,18 @@ export {
   loadSummoners,
 } from './data.ts';
 export { lookupWord } from './dict.ts';
-export { settings };
+export { sentenceUnits } from './sentences.ts';
+export { collection, settings };
 
 let store: LearningStore | null = null;
 
 export function learningStore(): LearningStore {
   store ??= new LearningStore();
   return store;
+}
+
+export function recordReview(card: StudyCard, outcome: ReviewOutcome, now?: Date) {
+  return recordReviewIn(learningStore(), card, outcome, now);
 }
 
 let initialized: Promise<void> | null = null;
@@ -42,12 +52,13 @@ export function initShared(): Promise<void> {
     }
     const [lists] = await Promise.all([
       loadWordlists(),
-      settings.load(learningStore()).catch(() => {
-        // 讀不到資料庫（例如私密瀏覽）時用預設設定
-      }),
+      // 讀不到資料庫（例如私密瀏覽）時用預設設定，也不能收藏
+      settings.load(learningStore()).catch(() => {}),
+      collection.load(learningStore()).catch(() => {}),
     ]);
     setWordlists(lists);
     installWordPopup();
+    installSentencePicker();
   })();
   return initialized;
 }

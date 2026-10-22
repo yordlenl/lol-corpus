@@ -8,7 +8,6 @@ import './pages/champions.ts';
 import './pages/items.ts';
 import './pages/runes.ts';
 import './pages/summoners.ts';
-import './row-toggles.ts';
 import { href, parseHash, type Route } from './router.ts';
 
 const NAV: Array<{ page: Route['page']; label: string; to: string; also?: Route['page'] }> = [
@@ -75,7 +74,7 @@ export class CorpusApp extends LightElement {
               html`<a href=${n.to} class=${this.route.page === n.page || this.route.page === n.also ? 'current' : ''}>${n.label}</a>`,
           )}
         </nav>
-        <row-toggles></row-toggles>
+        <lol-row-toggles class="toggles"></lol-row-toggles>
         <a class="switch" href="/lol-study/">學習 App →</a>
       </header>
       <main class="content">${this.page()}</main>

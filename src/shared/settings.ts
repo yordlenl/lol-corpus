@@ -12,7 +12,12 @@ export class SettingsStore extends EventTarget implements SettingsApi {
 
   async load(store: LearningStore) {
     this.store = store;
-    this.value = await store.getSettings();
+    await this.reload();
+  }
+
+  async reload() {
+    if (!this.store) return;
+    this.value = await this.store.getSettings();
     this.dispatchEvent(new Event('change'));
   }
 

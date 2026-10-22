@@ -1,41 +1,28 @@
-// <lol-word-popup>：點英文單字後的查詞小視窗（音標、繁體釋義）。整頁只放一個。
+// <lol-word-popup>：點英文單字後的查詞小視窗（音標、繁體釋義、收藏單字）。整頁只放一個。
 import { css, html, LitElement, nothing } from 'lit';
+import { collection } from '../collection.ts';
+import { wordCardId } from '../db.ts';
 import { lookupWord } from '../dict.ts';
 import type { LookupResult, WordEventDetail } from '../types.ts';
 import { define } from './define.ts';
+import { placeNear } from './place.ts';
+import { popupStyles } from './popup-styles.ts';
 import { themeStyles } from './styles.ts';
-
-const WIDTH = 320;
-const MARGIN = 8;
 
 export class LolWordPopup extends LitElement {
   static properties = {
     detail: { state: true },
     result: { state: true },
     failed: { state: true },
+    saving: { state: true },
   };
 
   static styles = [
     themeStyles,
+    popupStyles,
     css`
-      :host {
-        position: fixed;
-        inset: 0 auto auto 0;
-        z-index: 1000;
-      }
       .card {
-        position: fixed;
-        box-sizing: border-box;
-        width: ${WIDTH}px;
-        max-width: calc(100vw - ${MARGIN * 2}px);
-        max-height: 50vh;
-        overflow: auto;
-        padding: 14px 16px;
-        color: var(--lol-popup-text, var(--lol-text, #222));
-        background: var(--lol-popup-bg, #fff);
-        border: 1px solid var(--lol-popup-border, var(--lol-line, #ccc));
-        border-radius: var(--lol-popup-radius, 8px);
-        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+        width: 320px;
       }
       .top {
         display: flex;
@@ -69,18 +56,8 @@ export class LolWordPopup extends LitElement {
         background: var(--lol-popup-warn-bg, #fff4d6);
         border-radius: 4px;
       }
-      .close {
-        position: absolute;
-        top: 6px;
-        right: 6px;
-        width: 36px;
-        height: 36px;
-        font-size: 22px;
-        line-height: 1;
-        color: var(--lol-muted, #666);
-        background: none;
-        border: none;
-        cursor: pointer;
+      .actions {
+        margin-top: 12px;
       }
     `,
   ];
@@ -88,29 +65,29 @@ export class LolWordPopup extends LitElement {
   declare detail: WordEventDetail | null;
   declare result: LookupResult | null;
   declare failed: boolean;
+  declare saving: boolean;
 
   constructor() {
     super();
     this.detail = null;
     this.result = null;
     this.failed = false;
+    this.saving = false;
   }
 
   private onOutside = (event: PointerEvent) => {
-    if (!event.composedPath().includes(this)) this.close();
+    if (this.detail && !event.composedPath().includes(this)) this.close();
   };
-
-  private onKey = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') this.close();
-  };
-
+  private onKey = (event: KeyboardEvent) => event.key === 'Escape' && this.close();
   private onNavigate = () => this.close();
+  private onChange = () => this.requestUpdate();
 
   connectedCallback() {
     super.connectedCallback();
     document.addEventListener('pointerdown', this.onOutside, true);
     document.addEventListener('keydown', this.onKey);
     window.addEventListener('hashchange', this.onNavigate);
+    collection.addEventListener('change', this.onChange);
   }
 
   disconnectedCallback() {
@@ -118,6 +95,7 @@ export class LolWordPopup extends LitElement {
     document.removeEventListener('pointerdown', this.onOutside, true);
     document.removeEventListener('keydown', this.onKey);
     window.removeEventListener('hashchange', this.onNavigate);
+    collection.removeEventListener('change', this.onChange);
   }
 
   async open(detail: WordEventDetail) {
@@ -136,16 +114,24 @@ export class LolWordPopup extends LitElement {
     this.detail = null;
   }
 
-  /** 放在單字下方；下方放不下就放上方，左右不超出畫面 */
   protected updated() {
     const card = this.renderRoot.querySelector<HTMLElement>('.card');
-    if (!card || !this.detail) return;
-    const { anchor } = this.detail;
-    const left = Math.min(Math.max(MARGIN, anchor.left), window.innerWidth - card.offsetWidth - MARGIN);
-    const below = anchor.bottom + MARGIN;
-    const top = below + card.offsetHeight <= window.innerHeight - MARGIN ? below : Math.max(MARGIN, anchor.top - MARGIN - card.offsetHeight);
-    card.style.left = `${left}px`;
-    card.style.top = `${top}px`;
+    if (card && this.detail) placeNear(card, this.detail.anchor);
+  }
+
+  private async collect() {
+    const { detail, result } = this;
+    if (!detail || !result) return;
+    this.saving = true;
+    try {
+      await collection.addWord({
+        word: detail.word,
+        lemma: result.lemma,
+        ...(detail.source ? { context: { text: detail.text, source: detail.source } } : {}),
+      });
+    } finally {
+      this.saving = false;
+    }
   }
 
   private body() {
@@ -153,9 +139,15 @@ export class LolWordPopup extends LitElement {
     if (!this.result) return html`<div class="def">查詢中…</div>`;
     const { entry, lemma, surface } = this.result;
     if (!entry) return html`<div class="missing">辭典沒有收錄這個字</div>`;
+    const collected = collection.has(wordCardId(lemma));
     return html`
       ${lemma !== surface ? html`<div class="lemma">原形：${lemma}</div>` : nothing}
       <div class="def">${entry.t ?? '（沒有中文釋義）'}</div>
+      <div class="actions">
+        <button class="collect" type="button" ?disabled=${collected || this.saving} @click=${this.collect}>
+          ${collected ? '已收藏單字' : '＋ 收藏單字'}
+        </button>
+      </div>
     `;
   }
 

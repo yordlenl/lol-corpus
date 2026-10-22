@@ -44,7 +44,7 @@ export class PageRunes extends LightElement {
           <img class="rune-icon" src=${corpusUrl(shard.icon)} alt="" width="40" height="40" />
           <lol-trilingual class="detail-name" .text=${shard.name} context="name" .source=${source} compact></lol-trilingual>
         </div>
-        <lol-trilingual .text=${shard.description} .source=${source}></lol-trilingual>`;
+        <lol-trilingual .text=${shard.description} .source=${source} collectable></lol-trilingual>`;
     }
     if (!rune) return html`<p class="notice">點一個符文，這裡會顯示三行對照的說明。</p>`;
     const source: SourceRef = { type: 'rune', id: String(rune.id), label: rune.name };
@@ -52,7 +52,7 @@ export class PageRunes extends LightElement {
         <img class="rune-icon" src=${corpusUrl(rune.icon)} alt="" width="56" height="56" />
         <lol-trilingual class="detail-name" .text=${rune.name} context="name" .source=${source} compact></lol-trilingual>
       </div>
-      <lol-trilingual .text=${rune.long} .source=${source}></lol-trilingual>`;
+      <lol-trilingual .text=${rune.long} .source=${source} collectable></lol-trilingual>`;
   }
 
   render() {

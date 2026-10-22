@@ -1,6 +1,10 @@
+import { registerSW } from 'virtual:pwa-register';
 import './style.css';
 import './app/app.ts';
 import { initShared } from './shared/index.ts';
+
+// 離線使用；有新版本時自動換新
+registerSW({ immediate: true });
 
 const root = document.querySelector<HTMLDivElement>('#app')!;
 

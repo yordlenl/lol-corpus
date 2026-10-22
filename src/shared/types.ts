@@ -206,6 +206,8 @@ export interface WordEventDetail {
   context: TextContext;
   /** 單字所在的整段英文 */
   sentence: string;
+  /** 單字所在那一段的三種語言（純文字），收藏單字時存成例句 */
+  text: Tri;
   source?: SourceRef;
   /** 點擊位置，查詞小視窗靠著它顯示 */
   anchor: { left: number; top: number; right: number; bottom: number };
@@ -261,12 +263,25 @@ export interface WordCard extends CardBase {
   context?: { text: Tri; source: SourceRef };
 }
 
+/**
+ * 句子和中文對齊到哪一層：
+ * sentence 逐句對齊；line 中文是同一行（英文那行有好幾句）；block 中文是整段
+ */
+export type Alignment = 'sentence' | 'line' | 'block';
+
+/** 一段文字拆出來的一句（收藏句子時讓使用者挑） */
+export interface SentenceUnit {
+  text: Tri;
+  alignment: Alignment;
+}
+
 export interface SentenceCard extends CardBase {
   kind: 'sentence';
   text: Tri;
   source: SourceRef;
   /** 有遊戲原聲時的音檔網址 */
   audio?: string;
+  alignment?: Alignment;
 }
 
 export type StudyCard = WordCard | SentenceCard;
@@ -277,6 +292,18 @@ export interface ReviewLog {
   /** FSRS 評分：1 Again、2 Hard、3 Good、4 Easy */
   rating: 1 | 2 | 3 | 4;
   reviewedAt: string;
+  mode: string;
+  hinted: boolean;
+  /** 作答前是不是還沒學過的新卡（計算今日新學用） */
+  wasNew?: boolean;
+  /** 這次作答後排定的下次複習時間 */
+  nextDue?: string;
+}
+
+/** 一次作答的結果 */
+export interface ReviewOutcome {
+  rating: ReviewLog['rating'];
+  /** 練習方式，例如 word（看釋義寫單字） */
   mode: string;
   hinted: boolean;
 }
@@ -314,6 +341,18 @@ export interface SettingsApi extends EventTarget {
   readonly current: Settings;
   update(patch: Partial<Settings>): Promise<void>;
   setRow(lang: Lang, visible: boolean): Promise<void>;
+  /** 重新從資料庫讀（例如匯入備份之後） */
+  reload(): Promise<void>;
+}
+
+/** 生詞本與句子庫的收藏狀態；收藏有變動時發出 change 事件 */
+export interface CollectionApi extends EventTarget {
+  has(id: string): boolean;
+  addWord(input: { word: string; lemma: string; context?: WordCard['context'] }): Promise<WordCard>;
+  addSentence(input: { unit: SentenceUnit; source: SourceRef; audio?: string }): Promise<SentenceCard>;
+  remove(id: string): Promise<void>;
+  /** 重新從資料庫讀（例如匯入備份之後） */
+  reload(): Promise<void>;
 }
 
 export interface SharedModule {
@@ -331,5 +370,10 @@ export interface SharedModule {
   /** 語料庫裡的檔案網址，例如圖示 */
   corpusUrl(path: string): string;
   settings: SettingsApi;
+  collection: CollectionApi;
   learningStore(): LearningStoreApi;
+  /** 記下一次作答：用 ts-fsrs 排下次複習、存回卡片、寫一筆複習紀錄 */
+  recordReview(card: StudyCard, outcome: ReviewOutcome, now?: Date): Promise<{ card: StudyCard; log: ReviewLog }>;
+  /** 把一段文字拆成可以收藏的句子 */
+  sentenceUnits(text: Tri<Rich>): SentenceUnit[];
 }

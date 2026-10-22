@@ -2,6 +2,7 @@
 // 格式只在這裡定義一次，語料庫和學習 App 都透過它讀寫。
 import { createEmptyCard, type Card } from 'ts-fsrs';
 import type {
+  Alignment,
   CardOrigin,
   ExportFile,
   FsrsState,
@@ -114,7 +115,7 @@ export function newWordCard(
 }
 
 export function newSentenceCard(
-  input: { text: Tri; source: SourceRef; origin: CardOrigin; audio?: string },
+  input: { text: Tri; source: SourceRef; origin: CardOrigin; audio?: string; alignment?: Alignment },
   now = new Date(),
 ): SentenceCard {
   return {
@@ -123,6 +124,7 @@ export function newSentenceCard(
     text: input.text,
     source: input.source,
     ...(input.audio ? { audio: input.audio } : {}),
+    ...(input.alignment ? { alignment: input.alignment } : {}),
     addedAt: now.toISOString(),
     origin: input.origin,
     fsrs: fsrsToState(createEmptyCard(now)),
@@ -210,12 +212,18 @@ export class LearningStore implements LearningStoreApi {
     };
   }
 
-  /** replace：先清空再匯入；merge：同 id 的卡片以檔案為準，其餘保留 */
+  /**
+   * replace：先清空再匯入。
+   * merge：同 id 的卡片以檔案為準，其餘保留；同一張卡、同一時間的複習紀錄已經有了就跳過（同一個檔案匯入兩次不會重複）。
+   * 回傳匯入的卡片數與實際新增的複習紀錄數。
+   */
   async importAll(file: ExportFile, mode: 'replace' | 'merge'): Promise<{ cards: number; reviewLogs: number }> {
     if (file?.app !== 'lol-english') throw new Error('這不是 LoL 英語的備份檔');
     if (typeof file.formatVersion !== 'number' || file.formatVersion > FORMAT_VERSION) {
       throw new Error(`備份檔格式版本 ${file.formatVersion} 比這個網站新，請先更新網站再匯入`);
     }
+    const logKey = (log: ReviewLog) => `${log.cardId}|${log.reviewedAt}`;
+    const existing = mode === 'merge' ? new Set((await this.listReviewLogs()).map(logKey)) : new Set<string>();
     const db = await this.open();
     const tx = db.transaction([CARDS, LOGS, SETTINGS], 'readwrite');
     const cards = tx.objectStore(CARDS);
@@ -225,13 +233,17 @@ export class LearningStore implements LearningStoreApi {
       logs.clear();
     }
     for (const card of file.cards) cards.put(card);
+    let added = 0;
     for (const log of file.reviewLogs) {
+      if (existing.has(logKey(log))) continue;
+      existing.add(logKey(log));
       const { id: _ignored, ...rest } = log;
       logs.add(mode === 'replace' && log.id != null ? log : rest);
+      added++;
     }
     tx.objectStore(SETTINGS).put({ key: SETTINGS_KEY, value: file.settings });
     await done(tx);
-    return { cards: file.cards.length, reviewLogs: file.reviewLogs.length };
+    return { cards: file.cards.length, reviewLogs: added };
   }
 }
 

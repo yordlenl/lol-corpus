@@ -1,5 +1,7 @@
 // <lol-quote>：一句台詞：情境、播放原聲、三行文字（標示學習譯文）、來源連結。
 import { css, html, LitElement, nothing } from 'lit';
+import { collection } from '../collection.ts';
+import { sentenceCardId } from '../db.ts';
 import type { Lang, Quote, SourceRef } from '../types.ts';
 import { define } from './define.ts';
 import { themeStyles } from './styles.ts';
@@ -36,7 +38,7 @@ export class LolQuote extends LitElement {
         font-weight: 600;
         color: var(--lol-accent, inherit);
       }
-      button {
+      button:not(.collect) {
         min-height: 36px;
         padding: 0 14px;
         font: inherit;
@@ -57,6 +59,9 @@ export class LolQuote extends LitElement {
       .badge {
         margin-left: 0;
       }
+      .collect {
+        margin-left: auto;
+      }
     `,
   ];
 
@@ -70,9 +75,27 @@ export class LolQuote extends LitElement {
     this.state = 'idle';
   }
 
+  private onCollection = () => this.requestUpdate();
+
+  connectedCallback() {
+    super.connectedCallback();
+    collection.addEventListener('change', this.onCollection);
+  }
+
   disconnectedCallback() {
     super.disconnectedCallback();
+    collection.removeEventListener('change', this.onCollection);
     if (playing?.owner === this) this.stop();
+  }
+
+  /** 台詞只有一句，整句收；有原聲就一起存（第四階段聽寫用） */
+  private async collect() {
+    const q = this.quote!;
+    await collection.addSentence({
+      unit: { text: { en: q.text.en, zh_TW: q.text.zh_TW, zh_CN: q.text.zh_CN }, alignment: 'sentence' },
+      source: { type: 'quote', id: q.id },
+      ...(q.audio.en ? { audio: q.audio.en } : {}),
+    });
   }
 
   stop() {
@@ -108,6 +131,9 @@ export class LolQuote extends LitElement {
     for (const lang of ['zh_TW', 'zh_CN'] as const) {
       if (q.translation[lang] === 'learning') badges[lang] = '學習譯文';
     }
+    // 非語言聲音、虛構語言沒有英文可以練，不能收
+    const canCollect = this.mode === 'read' && !q.nonverbal && !q.fictionalLanguage;
+    const collected = collection.has(sentenceCardId(source, q.text.en));
     const playLabel = this.state === 'playing' ? '■ 停止' : this.state === 'loading' ? '載入中…' : '▶ 播放原聲';
     return html`
       <div class="head">
@@ -116,6 +142,11 @@ export class LolQuote extends LitElement {
         ${q.fictionalLanguage ? html`<span class="badge">虛構語言</span>` : nothing}
         ${q.audio.en ? html`<button type="button" @click=${this.toggle}>${playLabel}</button>` : nothing}
         <a href=${q.source} target="_blank" rel="noopener">來源</a>
+        ${canCollect
+          ? html`<button class="collect" type="button" ?disabled=${collected} @click=${this.collect}>
+              ${collected ? '已收藏句子' : '＋ 收藏句子'}
+            </button>`
+          : nothing}
       </div>
       <lol-trilingual
         .text=${{ en: q.text.en, zh_TW: q.text.zh_TW, zh_CN: q.text.zh_CN }}
