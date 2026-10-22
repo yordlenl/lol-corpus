@@ -20,7 +20,7 @@
 ## 資料夾
 
 - `src/`：網頁程式
-- `public/`：原樣發布的檔案（manifest、圖示）
+- `public/`：原樣發布的檔案（網頁圖示）
 - `scripts/`：開發用小工具
 - `docs/reference/`：遊戲畫面參考截圖，介面完成後和這些圖並排比對
 - `docs/ipad-debugging.md`：用 Mac Safari 偵錯 iPad 上網頁的步驟
