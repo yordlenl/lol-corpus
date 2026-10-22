@@ -21,6 +21,9 @@ export default defineConfig({
       manifest: false,
       scope: '/lol-corpus/',
       workbox: {
+        // 新版本下載好就立刻接手，不用等 App 完全關掉再開（我們自己註冊 service worker，外掛不會自動加這兩項）
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ['**/*.{html,js,css,json,png}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: 'index.html',
