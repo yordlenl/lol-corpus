@@ -100,7 +100,11 @@ export interface Champion extends ChampionSummary {
   quotes: Quote[];
 }
 
-export type ItemTier = 'starter' | 'consumable' | 'boots' | 'basic' | 'epic' | 'legendary';
+/** 商店的四區：起始、基礎、中間件、傳說（照官方等級） */
+export type ItemTier = 'starter' | 'basic' | 'epic' | 'legendary';
+
+/** 商店上方的職業篩選（官方欄位） */
+export type ItemRole = 'Fighter' | 'Marksman' | 'Assassin' | 'Mage' | 'Tank' | 'Support';
 
 export interface Item {
   id: string;
@@ -113,6 +117,8 @@ export interface Item {
   tags: string[];
   depth: number;
   tier: ItemTier;
+  /** 官方職業，可能有好幾個，也可能沒有（例如三階鞋） */
+  roles: ItemRole[];
   icon: string;
 }
 

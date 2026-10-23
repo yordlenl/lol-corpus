@@ -16,11 +16,15 @@ export const IMG_DIR = join(ROOT, 'public', 'img');
 
 export const DDRAGON = 'https://ddragon.leagueoflegends.com';
 export const CDRAGON = `https://raw.communitydragon.org/${CDRAGON_VERSION}/plugins/rcp-be-lol-game-data/global`;
+/** 遊戲本體的檔案（官方裝備欄位、文字檔、商店圖集） */
+export const CDRAGON_GAME = `https://raw.communitydragon.org/${CDRAGON_VERSION}/game`;
 
 /** 三行對照用的語言包 */
 export const LANGS = ['en', 'zh_TW', 'zh_CN'] as const;
 export const DDRAGON_LOCALE = { en: 'en_US', zh_TW: 'zh_TW', zh_CN: 'zh_CN' } as const;
 export const CDRAGON_LOCALE = { en: 'default', zh_TW: 'zh_tw', zh_CN: 'zh_cn' } as const;
+/** 遊戲文字檔的資料夾（三種語言的檔案都放在各自資料夾的 menu/en_us/ 底下） */
+export const STRINGTABLE_LOCALE = { en: 'en_us', zh_TW: 'zh_tw', zh_CN: 'zh_cn' } as const;
 
 export const ECDICT_CSV_URL = 'https://unpkg.com/ecdict@0.0.4/assets/ecdict.csv';
 export const ECDICT_LEMMA_URL = 'https://unpkg.com/ecdict@0.0.4/assets/lemma.en.txt';

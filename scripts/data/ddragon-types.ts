@@ -41,6 +41,23 @@ export interface DDItem {
   inStore?: boolean;
 }
 
+/** CommunityDragon 遊戲裝備資料（items.cdtb.bin.json）裡用到的欄位 */
+export interface CDItemBin {
+  itemID?: number;
+  /** 官方等級：沒有這欄是基礎，1 起始，4 中間件，5 傳說，7 三階鞋和藥劑 */
+  epicness?: number;
+  /** 官方職業，每個值是一種：1 鬥士、2 射手、4 刺客、8 坦克、16 法師、32 輔助 */
+  mItemAttributes?: number[];
+  mEffectAmount?: number[];
+  mDataValues?: Array<{ mName: string; mValue: number }>;
+  [field: string]: unknown;
+}
+
+/** 遊戲文字檔（lol.stringtable.json） */
+export interface StringTable {
+  entries: Record<string, string>;
+}
+
 export interface DDRune {
   id: number;
   key: string;

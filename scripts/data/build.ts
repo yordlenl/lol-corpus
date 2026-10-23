@@ -10,6 +10,7 @@ import { findSimplified, toTraditional } from './chinese.ts';
 import {
   CACHE_DIR,
   CDRAGON,
+  CDRAGON_GAME,
   CDRAGON_LOCALE,
   CDRAGON_VERSION,
   CONTENT_DIR,
@@ -23,11 +24,14 @@ import {
   ECDICT_MIN_BYTES,
   IMG_DIR,
   LANGS,
+  STRINGTABLE_LOCALE,
 } from './config.ts';
-import type { CDPerk, CDPerkStyles, DDChampion, DDItem, DDRuneTree, DDSummoner } from './ddragon-types.ts';
+import type { CDItemBin, CDPerk, CDPerkStyles, DDChampion, DDItem, DDRuneTree, DDSummoner, StringTable } from './ddragon-types.ts';
 import { buildDictionary } from './dictionary.ts';
 import { download, getJson, getText, mapLimit } from './http.ts';
-import { buildItems } from './items.ts';
+import { buildItems, fillMissingDescriptions } from './items.ts';
+import { decodePng, encodePng } from './png.ts';
+import { cutShopIcons, SHOP_ATLASES, type ShopAtlas } from './shop-icons.ts';
 import { cdragonAssetUrl, buildRunes } from './runes.ts';
 import { buildSummoners } from './summoners.ts';
 import { type QuotesFile, validateQuotes } from './quotes.ts';
@@ -48,6 +52,13 @@ async function ddragon<T>(lang: Lang, file: string): Promise<T> {
 async function cdragon<T>(lang: Lang, file: string): Promise<T> {
   const locale = CDRAGON_LOCALE[lang];
   return getJson<T>(`${CDRAGON}/${locale}/v1/${file}`, join(CACHE_DIR, 'cdragon', CDRAGON_VERSION, locale, file));
+}
+
+/** 遊戲本體的檔案（很大，第一次要下載一陣子） */
+async function cdragonGame<T>(path: string): Promise<T> {
+  const cachePath = join(CACHE_DIR, 'cdragon', CDRAGON_VERSION, 'game', path);
+  await download(`${CDRAGON_GAME}/${path}`, cachePath, { timeoutMs: 600_000 });
+  return JSON.parse(await readFile(cachePath, 'utf8')) as T;
 }
 
 async function perLang<T>(load: (lang: Lang) => Promise<T>): Promise<Record<Lang, T>> {
@@ -82,13 +93,15 @@ async function main() {
   console.log(`遊戲資料版本：Data Dragon ${DDRAGON_VERSION}、CommunityDragon ${CDRAGON_VERSION}`);
 
   console.log('[1/5] 下載三語資料…');
-  const [championFull, items, summoners, runeTrees, perks, perkStyles] = await Promise.all([
+  const [championFull, items, summoners, runeTrees, perks, perkStyles, itemBins, stringTables] = await Promise.all([
     perLang((l) => ddragon<{ data: Record<string, DDChampion> }>(l, 'championFull.json')),
     perLang((l) => ddragon<{ data: Record<string, DDItem> }>(l, 'item.json')),
     perLang((l) => ddragon<{ data: Record<string, DDSummoner> }>(l, 'summoner.json')),
     perLang((l) => ddragon<DDRuneTree[]>(l, 'runesReforged.json')),
     perLang((l) => cdragon<CDPerk[]>(l, 'perks.json')),
     perLang((l) => cdragon<CDPerkStyles>(l, 'perkstyles.json')),
+    cdragonGame<Record<string, CDItemBin>>('items.cdtb.bin.json'),
+    perLang((l) => cdragonGame<StringTable>(`${STRINGTABLE_LOCALE[l]}/data/menu/en_us/lol.stringtable.json`)),
   ]);
 
   console.log('[2/5] 整理英雄、台詞、裝備、符文、召喚師技能…');
@@ -110,7 +123,8 @@ async function main() {
   await writeData('champions.json', index);
   for (const c of champions) await writeData(`champions/${c.id}.json`, c);
 
-  const builtItems = buildItems({ en: items.en.data, zh_TW: items.zh_TW.data, zh_CN: items.zh_CN.data }, onUnknownTag);
+  const itemLocales = fillMissingDescriptions({ en: items.en.data, zh_TW: items.zh_TW.data, zh_CN: items.zh_CN.data }, itemBins, stringTables);
+  const builtItems = buildItems(itemLocales, itemBins, onUnknownTag);
   await writeData('items.json', builtItems);
   const runes = buildRunes(runeTrees, perks, perkStyles, onUnknownTag);
   await writeData('runes.json', runes);
@@ -158,6 +172,19 @@ async function main() {
     }
   }
   const downloaded = await syncIcons(icons);
+
+  // 商店篩選圖示是從遊戲圖集切出來的，不在上面的下載清單裡（同步時會被當成舊檔刪掉），所以在這之後才寫
+  const atlases = {} as Record<ShopAtlas, ReturnType<typeof decodePng>>;
+  for (const name of SHOP_ATLASES) {
+    const cachePath = join(CACHE_DIR, 'cdragon', CDRAGON_VERSION, 'game', 'itemshop', name);
+    await download(`${CDRAGON_GAME}/assets/ux/itemshop/${name}`, cachePath);
+    atlases[name] = decodePng(await readFile(cachePath));
+  }
+  const shopIcons = cutShopIcons(atlases);
+  for (const [rel, image] of shopIcons) {
+    await mkdir(dirname(join(IMG_DIR, '..', rel)), { recursive: true });
+    await writeFile(join(IMG_DIR, '..', rel), encodePng(image));
+  }
 
   console.log('[4/5] 建詞典（第一次要下載約 60MB 的 ECDICT）…');
   const csvPath = join(CACHE_DIR, 'ecdict.csv');
@@ -210,7 +237,7 @@ async function main() {
     runes: runes.trees.reduce((n, t) => n + t.slots.flat().length, 0),
     shards: runes.shards.reduce((n, r) => n + r.shards.length, 0),
     summoners: spells.length,
-    icons: icons.size,
+    icons: icons.size + shopIcons.size,
     dictWords: dict.meta.count,
   };
   const meta: Meta = {

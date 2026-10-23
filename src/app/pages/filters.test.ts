@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ChampionSummary, Item } from '../../shared/types.ts';
 import { matchesChampion } from './champions.ts';
-import { matchesItem } from './items.ts';
+import { matchesItem } from './shop.ts';
 
 const ahri: ChampionSummary = {
   id: 'Ahri',

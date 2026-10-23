@@ -4,7 +4,7 @@
 
 - 網址：<https://yordlenl.github.io/lol-corpus/>（iPad 上從主畫面的「LoL 英語」打開，再切到語料庫）
 - 規格：[docs/spec.md](docs/spec.md)
-- 目前進度：第五階段（隨機挑戰：遮名與干擾項規則）
+- 目前進度：第六階段（照遊戲截圖重做裝備商店和符文頁）
 
 ## 常用指令
 
@@ -23,6 +23,8 @@
 
 1. 改 `scripts/data/config.ts` 裡的 `DDRAGON_VERSION`（例如 `16.22.1`）和 `CDRAGON_VERSION`（例如 `16.22`）。
 2. 執行 `npm run data`，看最後的報告：數量、查不到的字、沒見過的標籤、繁中裡的簡體字。
+   - 第一次會從 CommunityDragon 下載遊戲本體的裝備資料和三語文字檔（約 110MB，存在 `.cache/`）。
+   - 商店篩選圖示是從遊戲商店圖集切出來的，位置寫在 `scripts/data/shop-icons.ts`；切到空白的格子時 `npm run data` 會報錯；遊戲換了圖集，要打開新圖集重新量位置，再看一次商店頁的圖示對不對。
 3. 有新英雄時，`content/quotes.json` 要補上牠的選用、禁用台詞，不然建置會報錯。
 4. `npm test` 通過後推上去。
 
@@ -38,7 +40,7 @@
 | 內容 | 來源 |
 | --- | --- |
 | 技能、裝備、符文、召喚師技能、皮膚名、圖示 | Riot [Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon)（en_US／zh_TW／zh_CN） |
-| 屬性碎片 | [CommunityDragon](https://www.communitydragon.org/) |
+| 屬性碎片；裝備的職業和商店分區（遊戲本體的官方欄位）；商店篩選圖示（從遊戲商店圖集切出）；Data Dragon 描述空白的裝備（目前只有「世界地圖」）的三語描述 | [CommunityDragon](https://www.communitydragon.org/) |
 | 選用／禁用台詞與原聲 | League of Legends Wiki，經 [lol-english](https://github.com/carefreelove/lol-english) 整理，CC BY-SA 3.0（見 [content/README.md](content/README.md)） |
 | 音標與釋義 | [ECDICT](https://github.com/skywind3000/ECDICT)（MIT），釋義用 OpenCC 轉成繁體 |
 

@@ -299,135 +299,644 @@ button {
   padding: 10px 14px;
 }
 
-/* ---------- 裝備 ---------- */
+/* ---------- 裝備商店（照遊戲商店） ---------- */
 
-.item-grid {
+.shop {
+  --shop-line: #463714;
+  --shop-dark: #010a13;
+  --shop-slot: #1e2328;
+  --shop-cyan: #0ac8b9;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) 452px;
+  height: max(560px, calc(100dvh - 128px));
+  color: var(--text);
+  /* 遊戲商店是偏青的深藍 */
+  background: linear-gradient(180deg, #0e2633, #0a1b26 40%, #08141d);
+  border: 1px solid var(--gold-dark);
+  box-shadow: inset 0 0 0 1px rgba(1, 10, 19, 0.9), 0 0 0 1px rgba(200, 170, 110, 0.15);
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-.item-cell {
+.shop button {
+  -webkit-touch-callout: none;
+}
+
+.shop [lang='en'] {
+  font-size: 0.82em;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
+}
+
+.shop-main {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 6px 4px;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid var(--gold-dark);
+}
+
+.shop-tabs {
+  display: flex;
+  justify-content: center;
+  border-bottom: 1px solid var(--shop-line);
+  background: linear-gradient(180deg, rgba(10, 200, 185, 0.06), transparent);
+}
+
+.shop-tab {
+  margin: 0;
+  padding: 10px 24px 8px;
   color: var(--gold-light);
-  font-size: 13px;
-  text-decoration: none;
-  border: 1px solid transparent;
-}
-
-.item-cell img {
-  border: 1px solid var(--gold-dark);
-}
-
-.item-cell.current {
-  border-color: #0ac8b9;
-  background: rgba(10, 200, 185, 0.12);
-}
-
-.item-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.item-tile img {
-  display: block;
-  border: 1px solid var(--gold-dark);
-}
-
-/* ---------- 符文 ---------- */
-
-.tree-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.tree-tab {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px 6px 8px;
-  color: var(--text);
-  text-decoration: none;
-  border: 1px solid var(--gold-dark);
-}
-
-.tree-tab.current {
-  color: var(--gold-light);
-  border-color: var(--gold);
-  background: #1e2328;
-}
-
-.tree-name {
-  --lol-en-size: 1.3em;
-  margin-bottom: 12px;
+  font-size: 16px;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  border-bottom: 2px solid var(--gold);
 }
 
-.rune-row {
+.shop-search {
+  margin: 12px 14px 6px;
+  min-height: 40px;
+  padding: 0 12px 0 36px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--gold-light);
+  /* 放大鏡，和遊戲搜尋框一樣在左邊 */
+  background: var(--shop-dark)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='6.5' cy='6.5' r='5' fill='none' stroke='%23a09b8c' stroke-width='1.6'/%3E%3Cpath d='M10.2 10.2 15 15' stroke='%23a09b8c' stroke-width='1.8'/%3E%3C/svg%3E")
+    12px center / 16px no-repeat;
+  border: 1px solid #5b5a56;
+  border-radius: 0;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.shop-search::placeholder {
+  color: #5b5a56;
+}
+
+.role-bar {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 10px 0;
-  border-top: 1px solid rgba(120, 90, 40, 0.4);
+  gap: 2px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--shop-line);
 }
 
-.row-label {
-  flex: 0 0 100%;
-  color: var(--gold);
-  font-size: 14px;
-}
-
-.rune {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  width: 112px;
-  padding: 6px 4px;
-  color: var(--text);
-  font-size: 13px;
-  line-height: 1.3;
-  text-align: center;
-  text-decoration: none;
+.role-filter,
+.stat-filter,
+.stat-clear {
+  display: grid;
+  place-items: center;
+  padding: 0;
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  border: 0;
   cursor: pointer;
 }
 
-.rune img {
-  border-radius: 50%;
-  background: #010a13;
+.role-filter {
+  width: 46px;
+  height: 46px;
+  border-bottom: 2px solid transparent;
 }
 
-.rune.current {
+.role-filter.on {
+  border-bottom-color: var(--gold);
+}
+
+.shop-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.stat-bar {
+  flex: 0 0 48px;
+  overflow-y: auto;
+  padding: 6px 0;
+  border-right: 1px solid var(--shop-line);
+}
+
+.stat-clear,
+.stat-filter {
+  width: 48px;
+  height: 38px;
+}
+
+.stat-clear.idle {
+  opacity: 0.55;
+}
+
+.stat-filter.on {
+  background: radial-gradient(circle, rgba(200, 170, 110, 0.18), transparent 70%);
+}
+
+.stat-group {
+  margin: 4px 8px 0;
+  padding-top: 4px;
+  border-top: 1px solid var(--shop-line);
+}
+
+.stat-group .stat-filter {
+  width: 32px;
+}
+
+.shop-list {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 4px 12px 16px;
+  background: rgba(1, 10, 19, 0.22);
+}
+
+.shop-section {
+  margin: 14px 0 8px;
   color: var(--gold-light);
-  border-color: var(--gold);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
 }
 
-.rune-detail-head {
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 54px);
+  gap: 6px 4px;
+}
+
+.shop-item,
+.tree-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--gold-light);
+  text-decoration: none;
+}
+
+.shop-item img,
+.tree-item img,
+.into-slot img {
+  display: block;
+  border: 1px solid var(--shop-line);
+  background: var(--shop-dark);
+}
+
+.shop-item.current img,
+.tree-item.current img {
+  outline: 2px solid var(--shop-cyan);
+  outline-offset: 1px;
+  box-shadow: 0 0 10px rgba(10, 200, 185, 0.55);
+}
+
+.shop-price {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.shop-list,
+.shop-side,
+.stat-bar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold-dark) transparent;
+}
+
+.shop-empty {
+  padding: 24px 0;
+}
+
+.shop-side {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 16px 20px;
+  background: linear-gradient(180deg, #0c2431, #091a24 45%, #08141d);
+}
+
+.side-title {
+  margin: 0 0 8px;
+  color: var(--gold-light);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.into-row {
+  display: grid;
+  grid-template-columns: repeat(7, 44px);
+  gap: 8px 12px;
+  justify-content: start;
+}
+
+.into-slot {
+  display: block;
+  width: 44px;
+  height: 44px;
+}
+
+.into-slot img {
+  width: 44px;
+  height: 44px;
+}
+
+.into-slot.empty {
+  background: var(--shop-slot);
+  border: 1px solid #2c2f34;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.8);
+}
+
+.side-hint {
+  margin: 28px 0 0;
+  text-align: center;
+}
+
+/* 合成樹：上面一件、線往下連到每個材料 */
+.build-tree {
+  --tree-line: #5b5a56;
+  display: flex;
+  justify-content: center;
+  margin: 16px -16px 0;
+  padding: 28px 8px 24px;
+  border-top: 1px solid var(--shop-line);
+  border-bottom: 1px solid var(--gold-dark);
+  background: radial-gradient(ellipse at 50% 30%, rgba(10, 200, 185, 0.16), transparent 65%);
+}
+
+.build-tree ul {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: 22px 0 0;
+  list-style: none;
+}
+
+.build-tree ul.tree-root {
+  padding-top: 0;
+}
+
+.build-tree li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 22px 5px 0;
+}
+
+.build-tree ul.tree-root > li {
+  padding-top: 0;
+}
+
+/* 每個材料上方的橫線和直線 */
+.build-tree li::before,
+.build-tree li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 50%;
+  width: 50%;
+  height: 22px;
+  border-top: 1px solid var(--tree-line);
+}
+
+.build-tree li::after {
+  right: auto;
+  left: 50%;
+  border-left: 1px solid var(--tree-line);
+}
+
+.build-tree li:first-child::before,
+.build-tree li:last-child::after {
+  border-top: 0;
+}
+
+.build-tree li:last-child::before {
+  border-right: 1px solid var(--tree-line);
+}
+
+.build-tree li:last-child:not(:first-child)::after {
+  border: 0;
+}
+
+.build-tree li:only-child::after {
+  border-top: 0;
+}
+
+.build-tree ul.tree-root > li::before,
+.build-tree ul.tree-root > li::after {
+  display: none;
+}
+
+/* 從上一層往下到橫線的直線 */
+.build-tree ul ul::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 22px;
+  border-left: 1px solid var(--tree-line);
+}
+
+.side-detail {
+  padding-top: 16px;
+}
+
+.shop-hint {
+  position: fixed;
+  z-index: 30;
+  padding: 4px 10px;
+  color: var(--gold-light);
+  font-size: 14px;
+  white-space: nowrap;
+  pointer-events: none;
+  background: #010a13;
+  border: 1px solid var(--gold);
+}
+
+.shop-hint.right {
+  transform: translateY(-50%);
+}
+
+.shop-hint.below {
+  transform: translateX(-50%);
+}
+
+@media (max-width: 900px) {
+  .shop {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .shop-main {
+    border-right: 0;
+    border-bottom: 1px solid var(--gold-dark);
+  }
+  .shop-body {
+    max-height: 70vh;
+  }
+}
+
+/* ---------- 符文頁（照遊戲符文頁） ---------- */
+
+.rune-page {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 24px;
+  min-height: max(540px, calc(100dvh - 128px));
+  padding: 24px 32px 28px;
+  background: radial-gradient(ellipse at 20% 0%, rgba(30, 35, 40, 0.6), transparent 60%), #0b0e13;
+  border: 1px solid var(--gold-dark);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.rune-page button {
+  padding: 0;
+  font: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+}
+
+.rune-side {
+  --track: 92px;
+  min-width: 0;
+}
+
+.rune-head {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* 左上角的大系別圖示 */
+.tree-big {
+  display: grid;
+  place-items: center;
+  flex: 0 0 var(--track);
+  width: var(--track);
+  height: var(--track);
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--tree) 22%, transparent), #0b0e13 70%);
+}
+
+.tree-big img {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--tree) 55%, transparent));
+}
+
+.tree-pickers {
+  display: flex;
+  gap: 12px;
+}
+
+.tree-pick {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--tree) 16%, #0b0e13), #0b0e13 75%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.tree-pick img {
+  opacity: 0.75;
+}
+
+.tree-pick.on {
+  box-shadow: 0 0 0 2px var(--tree);
+}
+
+.tree-pick.on img {
+  opacity: 1;
+}
+
+/* 左邊的直線和每排的圓點 */
+.rune-track {
+  margin-top: 4px;
+}
+
+.rune-track.shards {
+  margin-top: 26px;
+}
+
+.track-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--track) minmax(0, 1fr);
+  align-items: center;
+}
+
+.track-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--track) / 2 - 1px);
+  width: 2px;
+  background: color-mix(in srgb, var(--tree) 35%, #1e2328);
+}
+
+.track-row:last-child::before {
+  bottom: 50%;
+}
+
+.rune-track.shards .track-row:first-child::before {
+  top: 50%;
+}
+
+.track-dot {
+  position: relative;
+  justify-self: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--tree) 0 5px, #0b0e13 6px);
+  box-shadow: 0 0 0 2px var(--tree);
+}
+
+.label-row {
+  height: 34px;
+}
+
+.keystone-label {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--tree);
+  font-size: 14px;
+  letter-spacing: 0.2em;
+}
+
+.keystone-label::before,
+.keystone-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--tree) 50%, transparent));
+}
+
+.keystone-label::after {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--tree) 50%, transparent), transparent);
+}
+
+.rune-choices {
+  display: flex;
+  justify-content: space-evenly;
+  max-width: 440px;
+}
+
+.keystones {
+  height: 110px;
+}
+
+/* 基石下面的金線、小符文各排之間的淡線 */
+.keystones::after,
+.minor:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: calc(var(--track) + 24px);
+  right: 24px;
+  height: 1px;
+  max-width: 400px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.keystones::after {
+  left: var(--track);
+  right: 0;
+  max-width: 460px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--tree) 45%, transparent), transparent);
+}
+
+.primary .minor {
+  height: 100px;
+}
+
+.secondary .minor {
+  height: 86px;
+}
+
+.shard-row {
+  height: 58px;
+}
+
+.rune-pick {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.rune-pick img {
+  border-radius: 50%;
+  filter: grayscale(1) brightness(0.62);
+  transition: filter 0.15s;
+}
+
+.rune-pick:hover img {
+  filter: grayscale(1) brightness(0.9);
+}
+
+.rune-pick.on img {
+  filter: none;
+  box-shadow: 0 0 0 2px var(--tree), 0 0 12px color-mix(in srgb, var(--tree) 45%, transparent);
+}
+
+.rune-pick.shard {
+  width: 42px;
+  height: 42px;
+  background: #15181d;
+}
+
+.rune-pick.shard img {
+  box-shadow: none;
+}
+
+.rune-pick.shard.on {
+  box-shadow: 0 0 0 2px var(--tree);
+}
+
+/* 點符文跳出的說明 */
+.rune-tip {
+  position: absolute;
+  z-index: 20;
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  padding: 14px 16px;
+  color: var(--text);
+  background: #010a13;
+  border: 1px solid var(--gold);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.rune-tip-head {
   display: flex;
   gap: 12px;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
-.rune-icon {
+.rune-tip-head img {
+  flex: none;
   border-radius: 50%;
-  background: #010a13;
+  background: #0b0e13;
 }
 
 .detail-name {
   --lol-en-size: 1.15em;
   font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .rune-page {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+  .tree-pickers {
+    gap: 6px;
+  }
 }
 
 /* ---------- 頁尾 ---------- */

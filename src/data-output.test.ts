@@ -46,6 +46,39 @@ describe('遊戲資料', () => {
     expect(items.filter((i) => i.name.en === "Archangel's Staff").map((i) => i.id)).toEqual(['3003']);
   });
 
+  it('裝備分成起始、基礎、中間件、傳說四區（官方等級）', () => {
+    const tierOf = (name: string) => items.find((i) => i.name.en === name)!.tier;
+    expect(new Set(items.map((i) => i.tier))).toEqual(new Set(['starter', 'basic', 'epic', 'legendary']));
+    expect(tierOf("Doran's Blade")).toBe('starter');
+    expect(tierOf('Health Potion')).toBe('starter');
+    expect(tierOf('Long Sword')).toBe('basic');
+    expect(tierOf('Boots')).toBe('basic');
+    expect(tierOf("Berserker's Greaves")).toBe('epic');
+    expect(tierOf('Swiftmarch')).toBe('legendary');
+    expect(tierOf("Rabadon's Deathcap")).toBe('legendary');
+  });
+
+  it('裝備的職業是官方欄位', () => {
+    const rolesOf = (name: string) => items.find((i) => i.name.en === name)!.roles;
+    expect(rolesOf('Infinity Edge')).toEqual(['Marksman']);
+    expect(rolesOf('Sunfire Aegis')).toEqual(['Tank']);
+    expect(rolesOf("Rabadon's Deathcap")).toEqual(['Mage']);
+    expect(rolesOf('Moonstone Renewer')).toEqual(['Support']);
+    expect(rolesOf("Doran's Blade")).toEqual(['Fighter', 'Marksman', 'Assassin']);
+  });
+
+  it('世界地圖（描述原本是空的）補上了三語官方描述', () => {
+    const atlas = items.find((i) => i.id === '3865')!;
+    expect(atlas.name.zh_TW).toBe('世界地圖');
+    expect(atlas.tier).toBe('starter');
+    expect(atlas.roles).toContain('Support');
+    for (const text of Object.values(atlas.description)) {
+      expect(richToPlain(text)).toMatch(/400/);
+      expect(richToPlain(text)).not.toMatch(/[@%]i:|\{\{/);
+    }
+    expect(richToPlain(atlas.description.zh_TW)).toContain('輔助任務');
+  });
+
   it('符文有五系，每系一排基石加三排小符文；屬性碎片三排', () => {
     expect(runes.trees).toHaveLength(5);
     for (const t of runes.trees) expect(t.slots).toHaveLength(4);

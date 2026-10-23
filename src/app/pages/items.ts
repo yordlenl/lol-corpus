@@ -1,22 +1,30 @@
-// 裝備：依等級分區列出；點一件在右側看三行描述與合成關係。照遊戲商店的排版在第六階段做。
-import { html, nothing } from 'lit';
+// 裝備：照遊戲的裝備商店排版。上方職業篩選、左側屬性篩選、中間依四區列出裝備；
+// 點一件，右側顯示「可合成」、合成樹和三行對照的描述。
+import { html, nothing, type PropertyValues } from 'lit';
 import { corpusUrl, loadItems } from '../../shared/index.ts';
-import type { Item, ItemTier } from '../../shared/types.ts';
+import type { Item } from '../../shared/types.ts';
 import { LightElement } from '../light.ts';
 import { href } from '../router.ts';
+import {
+  type BuildNode,
+  buildTree,
+  intoSlots,
+  priceLabel,
+  ROLE_FILTERS,
+  type RoleFilter,
+  shopIcon,
+  shopSections,
+  STAT_GROUPS,
+} from './shop.ts';
 
-export const TIER_SECTIONS: Array<[ItemTier, string]> = [
-  ['starter', '起始'],
-  ['consumable', '消耗品與飾品'],
-  ['boots', '鞋子'],
-  ['basic', '基礎'],
-  ['epic', '中間件'],
-  ['legendary', '傳說'],
-];
+/** 長按多久算長按（顯示篩選名稱，不切換） */
+const LONG_PRESS_MS = 450;
 
-export function matchesItem(item: Item, query: string): boolean {
-  const q = query.trim().toLowerCase();
-  return !q || Object.values(item.name).some((n) => n.toLowerCase().includes(q));
+interface Hint {
+  label: string;
+  x: number;
+  y: number;
+  side: 'right' | 'below';
 }
 
 export class PageItems extends LightElement {
@@ -24,17 +32,29 @@ export class PageItems extends LightElement {
     selectedId: { attribute: false },
     items: { state: true },
     query: { state: true },
+    role: { state: true },
+    stats: { state: true },
+    hint: { state: true },
     error: { state: true },
   };
 
   declare selectedId: string | undefined;
   declare items: Item[] | undefined;
   declare query: string;
+  declare role: RoleFilter;
+  declare stats: string[];
+  declare hint: Hint | undefined;
   declare error: boolean;
+
+  private pressTimer: number | undefined;
+  private hideTimer: number | undefined;
+  private longPressed = false;
 
   constructor() {
     super();
     this.query = '';
+    this.role = 'all';
+    this.stats = [];
     this.error = false;
   }
 
@@ -46,17 +66,177 @@ export class PageItems extends LightElement {
     );
   }
 
-  private icons(ids: string[], byId: Map<string, Item>) {
-    return html`<div class="item-row">
-      ${ids.map((id) => {
-        const it = byId.get(id);
-        return it
-          ? html`<a class="item-tile" href=${href('items', id)} title=${it.name.zh_TW}>
-              <img src=${corpusUrl(it.icon)} alt=${it.name.zh_TW} width="40" height="40" loading="lazy" />
-            </a>`
-          : nothing;
-      })}
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    clearTimeout(this.pressTimer);
+    clearTimeout(this.hideTimer);
+  }
+
+  protected updated(changed: PropertyValues<this>) {
+    // 換看另一件時，右側捲回最上面
+    if (changed.has('selectedId')) this.querySelector('.shop-side')?.scrollTo(0, 0);
+  }
+
+  private toggleStat(key: string) {
+    this.stats = this.stats.includes(key) ? this.stats.filter((k) => k !== key) : [...this.stats, key];
+  }
+
+  private clearFilters() {
+    this.stats = [];
+    this.role = 'all';
+  }
+
+  // ---------- 篩選名稱的小提示：滑鼠移上去，或手指長按 ----------
+
+  private showHint(el: HTMLElement) {
+    clearTimeout(this.hideTimer);
+    const rect = el.getBoundingClientRect();
+    const side = el.dataset.hintSide === 'right' ? 'right' : 'below';
+    this.hint = {
+      label: el.dataset.hint ?? '',
+      side,
+      x: side === 'right' ? rect.right + 8 : rect.left + rect.width / 2,
+      y: side === 'right' ? rect.top + rect.height / 2 : rect.bottom + 6,
+    };
+  }
+
+  private hideHint(delay = 0) {
+    clearTimeout(this.hideTimer);
+    this.hideTimer = window.setTimeout(() => (this.hint = undefined), delay);
+  }
+
+  private onPointerDown = (e: PointerEvent) => {
+    const el = (e.target as Element).closest<HTMLElement>('[data-hint]');
+    clearTimeout(this.pressTimer);
+    this.longPressed = false;
+    if (!el || e.pointerType === 'mouse') return;
+    this.pressTimer = window.setTimeout(() => {
+      this.longPressed = true;
+      this.showHint(el);
+    }, LONG_PRESS_MS);
+  };
+
+  private onPointerEnd = () => {
+    clearTimeout(this.pressTimer);
+    if (this.longPressed) this.hideHint(1500);
+  };
+
+  /** 長按放開時不要切換篩選 */
+  private onClickCapture = (e: Event) => {
+    if (!this.longPressed) return;
+    this.longPressed = false;
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  private onMouseOver = (e: MouseEvent) => {
+    const el = (e.target as Element).closest<HTMLElement>('[data-hint]');
+    if (el && matchMedia('(hover: hover)').matches) this.showHint(el);
+  };
+
+  private onMouseOut = (e: MouseEvent) => {
+    if ((e.target as Element).closest('[data-hint]')) this.hideHint();
+  };
+
+  // ---------- 畫面 ----------
+
+  private filters() {
+    return html`
+      <div class="role-bar" role="group" aria-label="職業篩選">
+        ${ROLE_FILTERS.map(
+          (f) => html`<button
+            class="role-filter ${this.role === f.role ? 'on' : ''}"
+            aria-pressed=${this.role === f.role}
+            aria-label=${f.label}
+            data-hint=${f.label}
+            @click=${() => (this.role = f.role)}
+          >
+            <img src=${corpusUrl(shopIcon(`role-${f.icon}`, this.role === f.role))} alt="" width="32" height="32" />
+          </button>`,
+        )}
+      </div>
+    `;
+  }
+
+  private statColumn() {
+    const any = this.stats.length > 0 || this.role !== 'all';
+    return html`<div class="stat-bar" role="group" aria-label="屬性篩選">
+      <button class="stat-clear ${any ? '' : 'idle'}" aria-label="清空篩選" data-hint="清空篩選" data-hint-side="right" @click=${this.clearFilters}>
+        <img src=${corpusUrl(shopIcon('clear'))} alt="" width="30" height="30" />
+      </button>
+      ${STAT_GROUPS.map(
+        (group) => html`<div class="stat-group">
+          ${group.map((s) => {
+            const on = this.stats.includes(s.key);
+            const label = `${s.label}（${s.en}）`;
+            return html`<button
+              class="stat-filter ${on ? 'on' : ''}"
+              aria-pressed=${on}
+              aria-label=${label}
+              data-hint=${label}
+              data-hint-side="right"
+              @click=${() => this.toggleStat(s.key)}
+            >
+              <img src=${corpusUrl(shopIcon(`stat-${s.key}`, on))} alt="" width="32" height="32" />
+            </button>`;
+          })}
+        </div>`,
+      )}
     </div>`;
+  }
+
+  private grid(items: Item[]) {
+    const sections = shopSections(items, { role: this.role, stats: this.stats, query: this.query });
+    if (!sections.length) return html`<p class="shop-empty">沒有符合的裝備。</p>`;
+    return sections.map(
+      (section) => html`<h3 class="shop-section">${section.label} <span lang="en">${section.en}</span></h3>
+        <div class="shop-grid">
+          ${section.items.map(
+            (it) => html`<a
+              class="shop-item ${it.id === this.selectedId ? 'current' : ''}"
+              href=${href('items', it.id)}
+              aria-label=${it.name.zh_TW}
+              aria-current=${it.id === this.selectedId ? 'true' : 'false'}
+            >
+              <img src=${corpusUrl(it.icon)} alt="" width="44" height="44" loading="lazy" />
+              <span class="shop-price">${priceLabel(it.gold.total)}</span>
+            </a>`,
+          )}
+        </div>`,
+    );
+  }
+
+  private treeNode(node: BuildNode, root: boolean): unknown {
+    const it = node.item;
+    return html`<li>
+      <a class="tree-item ${root ? 'current' : ''}" href=${href('items', it.id)} aria-label=${it.name.zh_TW}>
+        <img src=${corpusUrl(it.icon)} alt="" width=${root ? 48 : 40} height=${root ? 48 : 40} />
+        <span class="shop-price">${priceLabel(it.gold.total)}</span>
+      </a>
+      ${node.children.length ? html`<ul>${node.children.map((c) => this.treeNode(c, false))}</ul>` : nothing}
+    </li>`;
+  }
+
+  private side(selected: Item | undefined, byId: Map<string, Item>) {
+    const into = (selected?.into ?? []).map((id) => byId.get(id)).filter((it): it is Item => Boolean(it));
+    const slots = intoSlots(into.length);
+    return html`
+      <h3 class="side-title">可合成 <span lang="en">BUILDS INTO</span></h3>
+      <div class="into-row">
+        ${Array.from({ length: slots }, (_, i) => {
+          const it = into[i];
+          return it
+            ? html`<a class="into-slot" href=${href('items', it.id)} aria-label=${it.name.zh_TW}>
+                <img src=${corpusUrl(it.icon)} alt="" width="40" height="40" loading="lazy" />
+              </a>`
+            : html`<span class="into-slot empty"></span>`;
+        })}
+      </div>
+      ${selected
+        ? html`<div class="build-tree"><ul class="tree-root">${this.treeNode(buildTree(selected, byId), true)}</ul></div>
+            <div class="side-detail"><lol-item-card .item=${selected}></lol-item-card></div>`
+        : html`<p class="side-hint">點左邊的裝備，這裡會顯示合成樹和三行對照的說明。</p>`}
+    `;
   }
 
   render() {
@@ -64,39 +244,37 @@ export class PageItems extends LightElement {
     if (!this.items) return html`<p class="notice">載入中…</p>`;
     const byId = new Map(this.items.map((it) => [it.id, it]));
     const selected = this.selectedId ? byId.get(this.selectedId) : undefined;
-    const shown = this.items.filter((it) => matchesItem(it, this.query));
-    return html`<div class="split">
-      <div class="split-main">
-        <input
-          class="search"
-          type="search"
-          placeholder="搜尋裝備（中文或英文）"
-          .value=${this.query}
-          @input=${(e: InputEvent) => (this.query = (e.target as HTMLInputElement).value)}
-        />
-        ${TIER_SECTIONS.map(([tier, label]) => {
-          const list = shown.filter((it) => it.tier === tier).sort((a, b) => a.gold.total - b.gold.total);
-          return list.length
-            ? html`<h2 class="section-title">${label}</h2>
-                <div class="item-grid">
-                  ${list.map(
-                    (it) => html`<a class="item-cell ${it.id === this.selectedId ? 'current' : ''}" href=${href('items', it.id)}>
-                      <img src=${corpusUrl(it.icon)} alt="" width="48" height="48" loading="lazy" />
-                      <span class="price">${it.gold.total}</span>
-                    </a>`,
-                  )}
-                </div>`
-            : nothing;
-        })}
+    return html`<div
+        class="shop"
+        @pointerdown=${this.onPointerDown}
+        @pointerup=${this.onPointerEnd}
+        @pointercancel=${this.onPointerEnd}
+        @click=${{ handleEvent: this.onClickCapture, capture: true }}
+        @mouseover=${this.onMouseOver}
+        @mouseout=${this.onMouseOut}
+        @contextmenu=${(e: Event) => (e.target as Element).closest('[data-hint]') && e.preventDefault()}
+      >
+        <section class="shop-main">
+          <div class="shop-tabs"><h2 class="shop-tab">全部裝備 <span lang="en">ALL ITEMS</span></h2></div>
+          <input
+            class="shop-search"
+            type="search"
+            placeholder="點這裡搜尋（中文或英文）"
+            aria-label="搜尋裝備"
+            .value=${this.query}
+            @input=${(e: InputEvent) => (this.query = (e.target as HTMLInputElement).value)}
+          />
+          ${this.filters()}
+          <div class="shop-body">
+            ${this.statColumn()}
+            <div class="shop-list">${this.grid(this.items)}</div>
+          </div>
+        </section>
+        <aside class="shop-side">${this.side(selected, byId)}</aside>
       </div>
-      <aside class="split-side panel">
-        ${selected
-          ? html`<lol-item-card .item=${selected}></lol-item-card>
-              ${selected.from.length ? html`<h3 class="mini-title">合成材料</h3>${this.icons(selected.from, byId)}` : nothing}
-              ${selected.into.length ? html`<h3 class="mini-title">可合成</h3>${this.icons(selected.into, byId)}` : nothing}`
-          : html`<p class="notice">點左邊的裝備，這裡會顯示三行對照的說明。</p>`}
-      </aside>
-    </div>`;
+      ${this.hint
+        ? html`<div class="shop-hint ${this.hint.side}" role="tooltip" style="left:${this.hint.x}px;top:${this.hint.y}px">${this.hint.label}</div>`
+        : nothing}`;
   }
 }
 
