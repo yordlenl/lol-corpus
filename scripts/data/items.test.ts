@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DDItem } from './ddragon-types.ts';
-import { fillMissingDescriptions, fillTemplate, isShopItem, itemRoles, itemTier, selectItemIds } from './items.ts';
+import { CALC_GAP, fillMissingDescriptions, fillTemplate, findUpgrades, isShopItem, itemRoles, itemTier, selectItemIds } from './items.ts';
 
 const shop = (name: string, extra: Partial<DDItem> = {}): DDItem => ({
   name,
@@ -93,5 +93,39 @@ describe('描述空白時用遊戲文字檔補上', () => {
     expect(out.zh_CN['3865'].description).toBe('Gold 3');
     expect(out.en['9000'].description).toBe('');
     expect(locales.en['3865'].description).toBe('');
+  });
+});
+
+describe('升級後的裝備', () => {
+  it('描述說會 transform／upgrade 成另一件裝備的，一路找下去；商店本來就有的不算「只能升級得到」', () => {
+    const items = {
+      '3119': shop("Winter's Approach", { description: 'Transforms into <rarityLegendary>Fimbulwinter</rarityLegendary>.' }),
+      '3121': shop('Fimbulwinter', { gold: { base: 0, total: 2400, sell: 0, purchasable: false } }),
+      '3865': shop('World Atlas', { description: 'transform it into <rarityGeneric>Runic Compass</rarityGeneric>' }),
+      '3866': shop('Runic Compass', { description: 'transform it into <rarityGeneric>Bounty of Worlds</rarityGeneric>' }),
+      '3867': shop('Bounty of Worlds', { description: 'can be upgraded into <rarityLegendary>Bloodsong</rarityLegendary>' }),
+      '3877': shop('Bloodsong'),
+      // 只是提到名字、沒有說升級的不算
+      '3070': shop('Tear', { description: 'Like <rarityGeneric>Fimbulwinter</rarityGeneric>' }),
+      // 其他模式的 6 位數 ID 不算
+      '323121': shop('Fimbulwinter'),
+    };
+    const { to, only } = findUpgrades(items, ['3119', '3865', '3877', '3070']);
+    expect(Object.fromEntries(to)).toEqual({ '3119': ['3121'], '3865': ['3866'], '3866': ['3867'], '3867': ['3877'] });
+    expect(only).toEqual(['3121', '3866', '3867']);
+  });
+
+  it('即時計算的數字標成空缺：英文是標籤後直接接空白或單獨的 %，中文是計算公式的名稱', () => {
+    const bin = { itemID: 3121, mDataValues: [{ mName: 'Cooldown', mValue: 8 }], mItemCalculations: { BonusHPFromMana: {} } };
+    const table = { entries: { Item_Cooldown: '%i:cooldown% (@Cooldown@s)' } };
+    expect(fillTemplate('Gain <scaleHealth> Health</scaleHealth>. {{ Item_Cooldown }}', bin, { table, gaps: true })).toBe(
+      `Gain <scaleHealth>${CALC_GAP} Health</scaleHealth>. (8s)`,
+    );
+    expect(fillTemplate('Gain % Heal and Shield Power.', bin, { gaps: true })).toBe(`Gain ${CALC_GAP}% Heal and Shield Power.`);
+    expect(fillTemplate('獲得<scaleHealth>@BonusHPFromMana@生命</scaleHealth>', bin, { gaps: true })).toBe(`獲得<scaleHealth>${CALC_GAP}生命</scaleHealth>`);
+    // 有寫數字的不動
+    expect(fillTemplate('Gain <scaleAD>2% max Mana</scaleAD>', bin, { gaps: true })).toBe('Gain <scaleAD>2% max Mana</scaleAD>');
+    // 沒開 gaps 時遇到計算公式還是報錯
+    expect(() => fillTemplate('@BonusHPFromMana@', bin)).toThrow();
   });
 });

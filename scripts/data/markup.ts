@@ -43,6 +43,8 @@ const TAG_STYLES: Record<string, TextStyle | null> = {
   flavortext: 'flavor',
   rules: 'flavor',
   i: 'flavor',
+  // 我們自己加的：遊戲裡即時計算、官方文字沒寫的數字（見 items.ts 的 CALC_GAP）
+  calcgap: 'gap',
   maintext: null,
   stats: null,
   font: null,

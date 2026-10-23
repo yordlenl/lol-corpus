@@ -67,6 +67,42 @@ describe('遊戲資料', () => {
     expect(rolesOf("Doran's Blade")).toEqual(['Fighter', 'Marksman', 'Assassin']);
   });
 
+  it('升級後的裝備（例如芬布爾之冬）有收進來、標明由哪一件升級，商店格子不列', () => {
+    const byId = new Map(items.map((i) => [i.id, i]));
+    const chain = (id: string) => byId.get(id)!.upgradesTo ?? [];
+    expect(chain('3119')).toEqual(['3121']); // 凜冬將至 → 芬布爾之冬
+    expect(chain('3004')).toEqual(['3042']); // 魔劍正宗 → 終極魔劍
+    expect(chain('3003')).toEqual(['3040']); // 大天使之杖 → 熾天使的擁抱
+    expect(chain('2526')).toEqual(['2530']); // 低語之環 → 歌謠之冠
+    expect(chain('3865')).toEqual(['3866']); // 世界地圖 → 符文指針 → 跨界獎賞 → 五件輔助傳說裝備
+    expect(chain('3866')).toEqual(['3867']);
+    expect(chain('3867')).toHaveLength(5);
+    const only = items.filter((i) => i.upgradeOnly).map((i) => i.id).sort();
+    expect(only).toEqual(['2530', '3040', '3042', '3121', '3866', '3867']);
+    for (const id of only) {
+      const it = byId.get(id)!;
+      const source = byId.get(it.upgradedFrom!)!;
+      expect(source.upgradesTo).toContain(id);
+      expect(it.tier).toBe(source.tier);
+    }
+    for (const id of chain('3867')) expect(byId.get(id)!.upgradedFrom).toBe('3867');
+  });
+
+  it('升級後裝備的描述是官方文字，即時計算的數字標成空缺（三種語言都有標）', () => {
+    const gaps = (text: Rich) => (typeof text === 'string' ? [] : text.filter((r) => typeof r !== 'string' && r[1] === 'gap'));
+    const fimbulwinter = items.find((i) => i.id === '3121')!;
+    for (const text of Object.values(fimbulwinter.description)) expect(gaps(text)).toHaveLength(1);
+    expect(richToPlain(fimbulwinter.description.zh_TW)).toContain('獲得□生命');
+    // 符文指針的任務金額 Data Dragon 寫 0，遊戲文字檔有正確的數字
+    expect(richToPlain(items.find((i) => i.id === '3866')!.description.en)).toContain('Earn 800 gold');
+    // 終極魔劍沒有即時計算的數字
+    expect(gaps(items.find((i) => i.id === '3042')!.description.en)).toHaveLength(0);
+  });
+
+  it('所有裝備描述都沒有留下沒處理的代號', () => {
+    for (const it of items) for (const text of Object.values(it.description)) expect(richToPlain(text)).not.toMatch(/@\w+@|\{\{|%i:/);
+  });
+
   it('世界地圖（描述原本是空的）補上了三語官方描述', () => {
     const atlas = items.find((i) => i.id === '3865')!;
     expect(atlas.name.zh_TW).toBe('世界地圖');

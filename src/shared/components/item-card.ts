@@ -65,7 +65,7 @@ export class LolItemCard extends LitElement {
         <img class="icon" src=${corpusUrl(item.icon)} alt="" />
         <div>
           <lol-trilingual class="name" .text=${item.name} context="name" .source=${source} compact></lol-trilingual>
-          <div class="gold">${item.gold.total} 金幣</div>
+          <div class="gold">${item.upgradeOnly ? '升級取得（商店買不到）' : `${item.gold.total} 金幣`}</div>
         </div>
       </div>
       ${hasPlain

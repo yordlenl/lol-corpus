@@ -124,7 +124,7 @@ async function main() {
   for (const c of champions) await writeData(`champions/${c.id}.json`, c);
 
   const itemLocales = fillMissingDescriptions({ en: items.en.data, zh_TW: items.zh_TW.data, zh_CN: items.zh_CN.data }, itemBins, stringTables);
-  const builtItems = buildItems(itemLocales, itemBins, onUnknownTag);
+  const builtItems = buildItems(itemLocales, itemBins, stringTables, onUnknownTag);
   await writeData('items.json', builtItems);
   const runes = buildRunes(runeTrees, perks, perkStyles, onUnknownTag);
   await writeData('runes.json', runes);

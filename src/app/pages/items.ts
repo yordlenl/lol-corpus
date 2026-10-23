@@ -9,6 +9,7 @@ import {
   type BuildNode,
   buildTree,
   intoSlots,
+  itemPriceLabel,
   priceLabel,
   ROLE_FILTERS,
   type RoleFilter,
@@ -211,10 +212,25 @@ export class PageItems extends LightElement {
     return html`<li>
       <a class="tree-item ${root ? 'current' : ''}" href=${href('items', it.id)} aria-label=${it.name.zh_TW}>
         <img src=${corpusUrl(it.icon)} alt="" width=${root ? 48 : 40} height=${root ? 48 : 40} />
-        <span class="shop-price">${priceLabel(it.gold.total)}</span>
+        <span class="shop-price">${itemPriceLabel(it)}</span>
       </a>
       ${node.children.length ? html`<ul>${node.children.map((c) => this.treeNode(c, false))}</ul>` : nothing}
     </li>`;
+  }
+
+  /** 升級前後的裝備（例如冬之臨 ↔ 芬布爾之冬）：圖示加名稱，點了換成看那一件 */
+  private upgradeRow(label: string, en: string, ids: string[], byId: Map<string, Item>) {
+    const list = ids.map((id) => byId.get(id)).filter((it): it is Item => Boolean(it));
+    if (!list.length) return nothing;
+    return html`<h3 class="side-title upgrade-title">${label} <span lang="en">${en}</span></h3>
+      <div class="upgrade-row">
+        ${list.map(
+          (it) => html`<a class="upgrade-link" href=${href('items', it.id)}>
+            <img src=${corpusUrl(it.icon)} alt="" width="40" height="40" loading="lazy" />
+            <span>${it.name.zh_TW}<span class="upgrade-en" lang="en">${it.name.en}</span></span>
+          </a>`,
+        )}
+      </div>`;
   }
 
   private side(selected: Item | undefined, byId: Map<string, Item>) {
@@ -232,6 +248,8 @@ export class PageItems extends LightElement {
             : html`<span class="into-slot empty"></span>`;
         })}
       </div>
+      ${this.upgradeRow('升級後', 'UPGRADES TO', selected?.upgradesTo ?? [], byId)}
+      ${this.upgradeRow('升級自', 'UPGRADED FROM', selected?.upgradedFrom ? [selected.upgradedFrom] : [], byId)}
       ${selected
         ? html`<div class="build-tree"><ul class="tree-root">${this.treeNode(buildTree(selected, byId), true)}</ul></div>
             <div class="side-detail"><lol-item-card .item=${selected}></lol-item-card></div>`

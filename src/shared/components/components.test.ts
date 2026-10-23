@@ -44,6 +44,15 @@ describe('<lol-trilingual>', () => {
     expect(words).toEqual(['throws', 'orb']);
   });
 
+  it('官方文字沒寫的數字顯示成「依英雄屬性計算」的標註，不能點', async () => {
+    const el = await mount('lol-trilingual', {
+      text: { en: ['Gain ', ['□', 'gap'], [' Health', 'heal'], '.'], zh_TW: ['獲得', ['□', 'gap'], '生命。'], zh_CN: ['获得', ['□', 'gap'], '生命值。'] },
+    });
+    const gaps = el.shadowRoot!.querySelectorAll('.s-gap');
+    expect(gaps).toHaveLength(3);
+    expect(gaps[0].querySelector('.w')).toBeNull();
+  });
+
   it('名稱裡英雄名可以點', async () => {
     const el = await mount('lol-trilingual', { text: { en: 'Ahri', zh_TW: '阿璃', zh_CN: '阿狸' }, context: 'name' });
     expect([...el.shadowRoot!.querySelectorAll('.w')].map((w) => w.textContent)).toEqual(['Ahri']);

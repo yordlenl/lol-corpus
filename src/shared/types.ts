@@ -26,7 +26,9 @@ export type TextStyle =
   | 'status'
   | 'speed'
   | 'gold'
-  | 'flavor';
+  | 'flavor'
+  /** 官方文字沒寫、遊戲裡依英雄屬性即時計算的數字（文字是 □，畫面上顯示「依英雄屬性計算」） */
+  | 'gap';
 
 /** 一小段帶樣式的文字：[文字, 樣式] */
 export type StyledRun = [text: string, style: TextStyle];
@@ -120,6 +122,12 @@ export interface Item {
   /** 官方職業，可能有好幾個，也可能沒有（例如三階鞋） */
   roles: ItemRole[];
   icon: string;
+  /** 升級後會變成的裝備（例如冬之臨 → 芬布爾之冬） */
+  upgradesTo?: string[];
+  /** 由哪一件升級來的 */
+  upgradedFrom?: string;
+  /** 商店買不到、只能升級得到（不放進商店格子） */
+  upgradeOnly?: boolean;
 }
 
 export interface Rune {

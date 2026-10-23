@@ -50,6 +50,8 @@ export interface CDItemBin {
   mItemAttributes?: number[];
   mEffectAmount?: number[];
   mDataValues?: Array<{ mName: string; mValue: number }>;
+  /** 依英雄屬性即時計算的公式（文字檔裡寫成 @公式名稱@） */
+  mItemCalculations?: Record<string, unknown>;
   [field: string]: unknown;
 }
 

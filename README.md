@@ -40,7 +40,7 @@
 | 內容 | 來源 |
 | --- | --- |
 | 技能、裝備、符文、召喚師技能、皮膚名、圖示 | Riot [Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon)（en_US／zh_TW／zh_CN） |
-| 屬性碎片；裝備的職業和商店分區（遊戲本體的官方欄位）；商店篩選圖示（從遊戲商店圖集切出）；Data Dragon 描述空白的裝備（目前只有「世界地圖」）的三語描述 | [CommunityDragon](https://www.communitydragon.org/) |
+| 屬性碎片；裝備的職業和商店分區（遊戲本體的官方欄位）；商店篩選圖示（從遊戲商店圖集切出）；Data Dragon 描述空白的裝備（「世界地圖」）和升級後裝備（例如芬布爾之冬）的三語官方描述；遊戲裡依英雄屬性即時計算的數字，官方文字沒寫，頁面上標成「依英雄屬性計算」 | [CommunityDragon](https://www.communitydragon.org/) |
 | 選用／禁用台詞與原聲 | League of Legends Wiki，經 [lol-english](https://github.com/carefreelove/lol-english) 整理，CC BY-SA 3.0（見 [content/README.md](content/README.md)） |
 | 音標與釋義 | [ECDICT](https://github.com/skywind3000/ECDICT)（MIT），釋義用 OpenCC 轉成繁體 |
 

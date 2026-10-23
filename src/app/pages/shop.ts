@@ -80,9 +80,9 @@ export function matchesFilter(item: Item, filter: ShopFilter): boolean {
   return matchesItem(item, filter.query);
 }
 
-/** 照四區分好，每區依價格排；沒有東西的區不列 */
+/** 照四區分好，每區依價格排；沒有東西的區不列。只能升級得到的裝備商店買不到，不列 */
 export function shopSections(items: Item[], filter: ShopFilter) {
-  const shown = items.filter((it) => matchesFilter(it, filter));
+  const shown = items.filter((it) => !it.upgradeOnly && matchesFilter(it, filter));
   return TIER_SECTIONS.map((section) => ({
     ...section,
     items: shown
@@ -114,3 +114,6 @@ export function intoSlots(count: number): number {
 }
 
 export const priceLabel = (gold: number) => (gold === 0 ? '免費' : String(gold));
+
+/** 合成樹上的價格；只能升級得到的裝備寫「升級」 */
+export const itemPriceLabel = (item: Item) => (item.upgradeOnly ? '升級' : priceLabel(item.gold.total));

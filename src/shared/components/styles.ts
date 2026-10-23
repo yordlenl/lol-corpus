@@ -45,6 +45,25 @@ export const themeStyles = css`
     font-style: italic;
     color: var(--lol-muted, inherit);
   }
+  /* 官方文字沒寫的數字：藏起 □，改顯示一個小標註 */
+  .s-gap {
+    font-size: 0;
+  }
+  .s-gap::before {
+    content: '依英雄屬性計算';
+    display: inline-block;
+    margin: 0 3px;
+    padding: 0 5px;
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1.5;
+    vertical-align: 1px;
+    color: var(--lol-muted, inherit);
+    border: 1px dashed var(--lol-line, currentColor);
+    border-radius: var(--lol-badge-radius, 3px);
+    white-space: nowrap;
+  }
   .badge {
     display: inline-block;
     margin-left: 6px;

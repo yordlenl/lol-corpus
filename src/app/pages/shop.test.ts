@@ -5,6 +5,7 @@ import {
   buildTree,
   type BuildNode,
   intoSlots,
+  itemPriceLabel,
   matchesFilter,
   priceLabel,
   ROLE_FILTERS,
@@ -25,7 +26,9 @@ describe('商店篩選', () => {
   it('不篩選時四區都在、全部裝備都列出，每區依價格排', () => {
     const sections = shopSections(items, all);
     expect(sections.map((s) => s.tier)).toEqual(TIER_SECTIONS.map((s) => s.tier));
-    expect(sections.reduce((n, s) => n + s.items.length, 0)).toBe(items.length);
+    // 只能升級得到的裝備商店買不到，不列
+    expect(sections.reduce((n, s) => n + s.items.length, 0)).toBe(items.filter((i) => !i.upgradeOnly).length);
+    expect(sections.flatMap((s) => s.items).some((i) => i.name.en === 'Fimbulwinter')).toBe(false);
     for (const s of sections) {
       const prices = s.items.map((i) => i.gold.total);
       expect(prices).toEqual([...prices].sort((a, b) => a - b));
@@ -110,8 +113,10 @@ describe('可合成', () => {
     expect(intoSlots(20)).toBe(21);
   });
 
-  it('價格 0 顯示「免費」', () => {
+  it('價格 0 顯示「免費」；只能升級得到的寫「升級」', () => {
     expect(priceLabel(0)).toBe('免費');
     expect(priceLabel(850)).toBe('850');
+    expect(itemPriceLabel(byName('Fimbulwinter'))).toBe('升級');
+    expect(itemPriceLabel(byName("Winter's Approach"))).toBe(String(byName("Winter's Approach").gold.total));
   });
 });

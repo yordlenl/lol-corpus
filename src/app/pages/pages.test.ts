@@ -81,6 +81,19 @@ describe('裝備商店', () => {
     expect(page.querySelector('.shop-item.current')?.getAttribute('href')).toBe('#/items/1036');
   });
 
+  it('升級前後互相連得到：凜冬將至 ↔ 芬布爾之冬', async () => {
+    const page = await mountShop('3119');
+    const titles = () => [...page.querySelectorAll('.upgrade-title')].map((h) => h.textContent!.trim());
+    expect(titles()).toEqual(['升級後 UPGRADES TO']);
+    expect(page.querySelector('.upgrade-link')?.getAttribute('href')).toBe('#/items/3121');
+
+    page.selectedId = '3121';
+    await page.updateComplete;
+    expect(titles()).toEqual(['升級自 UPGRADED FROM']);
+    expect(page.querySelector('.upgrade-link')?.getAttribute('href')).toBe('#/items/3119');
+    expect(page.querySelector('.tree-item.current .shop-price')?.textContent).toBe('升級');
+  });
+
   it('還沒選裝備時，可合成是 7 個空格，下面有提示', async () => {
     const page = await mountShop();
     expect(page.querySelectorAll('.into-slot.empty')).toHaveLength(7);
