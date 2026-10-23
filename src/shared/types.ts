@@ -234,6 +234,9 @@ export interface SourceRef {
 
 export type CardOrigin = 'corpus' | 'practice' | 'challenge';
 
+/** 複習紀錄從哪裡來：複習、練習寫錯、隨機挑戰答錯 */
+export type LogSource = 'review' | 'practice' | 'challenge';
+
 /** ts-fsrs 的排程欄位（日期存成 ISO 字串，方便匯出匯入） */
 export interface FsrsState {
   due: string;
@@ -298,8 +301,8 @@ export interface ReviewLog {
   wasNew?: boolean;
   /** 這次作答後排定的下次複習時間 */
   nextDue?: string;
-  /** practice：練習寫錯自動記的（不算進首頁正確率） */
-  source?: 'review' | 'practice';
+  /** practice／challenge：練習或隨機挑戰寫錯自動記的（不算進首頁正確率） */
+  source?: LogSource;
 }
 
 /** 一次作答的結果 */
@@ -308,8 +311,8 @@ export interface ReviewOutcome {
   /** 練習方式，例如 word（看釋義寫單字） */
   mode: string;
   hinted: boolean;
-  /** practice：練習寫錯自動記的；沒寫就是複習 */
-  source?: 'review' | 'practice';
+  /** practice／challenge：練習或隨機挑戰寫錯自動記的；沒寫就是複習 */
+  source?: LogSource;
 }
 
 export interface Settings {
@@ -376,6 +379,23 @@ export interface GradeApi {
   diffWords(expected: string, answer: string): WordDiff;
 }
 
+// ---------- 隨機挑戰 ----------
+
+/** 英→中四選一的選項：英雄、裝備、符文或召喚師技能 */
+export interface ChallengeOption {
+  kind: 'champion' | 'item' | 'rune' | 'summoner';
+  id: string;
+  name: Tri;
+  icon: string;
+}
+
+/** 英→中的題目：遮名後的英文、正確答案、四個選項（已打亂） */
+export interface RecognitionQuestion {
+  masked: string;
+  answer: ChallengeOption;
+  options: ChallengeOption[];
+}
+
 // ---------- 共用模組的介面（學習 App 照這個呼叫） ----------
 
 export interface LearningStoreApi {
@@ -403,7 +423,8 @@ export interface SettingsApi extends EventTarget {
 export interface CollectionApi extends EventTarget {
   has(id: string): boolean;
   addWord(input: { word: string; lemma: string; context?: WordCard['context'] }): Promise<WordCard>;
-  addSentence(input: { unit: SentenceUnit; source: SourceRef; audio?: string }): Promise<SentenceCard>;
+  /** origin：從哪裡收的，沒寫就是語料庫 */
+  addSentence(input: { unit: SentenceUnit; source: SourceRef; audio?: string; origin?: CardOrigin }): Promise<SentenceCard>;
   remove(id: string): Promise<void>;
   /** 重新從資料庫讀（例如匯入備份之後） */
   reload(): Promise<void>;
@@ -437,4 +458,6 @@ export interface SharedModule {
   wordAt(text: Rich, index: number): string;
   /** 第幾個字所在的那一句（寫錯時收進句子庫用）；找不到回傳 null */
   unitForWord(text: Tri<Rich>, index: number): SentenceUnit | null;
+  /** 英→中：遮名並挑出干擾項；出處不是英雄、裝備、符文、召喚師技能時回傳 null */
+  recognitionQuestion(english: string, source: SourceRef, random?: () => number): Promise<RecognitionQuestion | null>;
 }

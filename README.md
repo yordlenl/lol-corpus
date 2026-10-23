@@ -4,7 +4,7 @@
 
 - 網址：<https://yordlenl.github.io/lol-corpus/>（iPad 上從主畫面的「LoL 英語」打開，再切到語料庫）
 - 規格：[docs/spec.md](docs/spec.md)
-- 目前進度：第四階段（練習模式：元件的挖空、挖空選詞、評分規則）
+- 目前進度：第五階段（隨機挑戰：遮名與干擾項規則）
 
 ## 常用指令
 
@@ -28,7 +28,7 @@
 
 ## 共用模組
 
-`src/shared/` 是兩個專案共用的部分：資料讀取、三行對照與卡片元件（Lit 自訂標籤，含練習模式的挖空）、收藏、拆句、挖空選詞、評分規則與逐字比對、學習紀錄資料庫（格式版本號在 `src/shared/db.ts`）、ts-fsrs 複習排程。
+`src/shared/` 是兩個專案共用的部分：資料讀取、三行對照與卡片元件（Lit 自訂標籤，含練習模式的挖空）、收藏、拆句、挖空選詞、評分規則與逐字比對、隨機挑戰的遮名與干擾項、學習紀錄資料庫（格式版本號在 `src/shared/db.ts`）、ts-fsrs 複習排程。
 
 - 語料庫直接使用；建置時另外打包成 `https://yordlenl.github.io/lol-corpus/shared/lol-shared.js` 給學習 App 載入。
 - 對外的型別寫在 `src/shared/types.ts`，發布成 `shared/lol-shared.d.ts`。改了介面之後，在學習 App 執行 `npm run sync-types`。

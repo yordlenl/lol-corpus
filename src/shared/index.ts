@@ -28,6 +28,7 @@ export {
   loadRunes,
   loadSummoners,
 } from './data.ts';
+export { recognitionQuestion } from './challenge.ts';
 export { lookupWord } from './dict.ts';
 export { planCloze, unitForWord, wordAt } from './practice.ts';
 export { sentenceUnits } from './sentences.ts';

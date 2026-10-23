@@ -1,6 +1,6 @@
 // 收藏狀態：哪些單字、句子已經收進生詞本與句子庫。語料庫各頁和學習 App 共用，收藏有變動時通知元件更新。
 import { newSentenceCard, newWordCard, type LearningStore } from './db.ts';
-import type { CollectionApi, SentenceCard, SentenceUnit, SourceRef, WordCard } from './types.ts';
+import type { CardOrigin, CollectionApi, SentenceCard, SentenceUnit, SourceRef, WordCard } from './types.ts';
 
 export class CollectionStore extends EventTarget implements CollectionApi {
   private ids = new Set<string>();
@@ -38,14 +38,19 @@ export class CollectionStore extends EventTarget implements CollectionApi {
     return card;
   }
 
-  async addSentence(input: { unit: SentenceUnit; source: SourceRef; audio?: string }): Promise<SentenceCard> {
+  async addSentence(input: {
+    unit: SentenceUnit;
+    source: SourceRef;
+    audio?: string;
+    origin?: CardOrigin;
+  }): Promise<SentenceCard> {
     const store = this.requireStore();
     const card = newSentenceCard({
       text: input.unit.text,
       source: input.source,
       audio: input.audio,
       alignment: input.unit.alignment,
-      origin: 'corpus',
+      origin: input.origin ?? 'corpus',
     });
     const existing = await store.getCard(card.id);
     if (existing) return existing as SentenceCard;
