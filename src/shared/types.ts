@@ -69,8 +69,73 @@ export interface Spell extends Ability {
 
 export interface Skin {
   id: string;
+  /** 0 是原版造型 */
   num: number;
   name: Tri;
+  /** 造型的故事介紹（有的才有） */
+  description?: Tri<Rich>;
+  /** 方形縮圖網址（連網載入） */
+  tile?: string;
+  /** 炫彩造型數量 */
+  chromas?: number;
+}
+
+/** 收藏「造型」格子的一格 */
+export interface SkinCard {
+  id: number;
+  champion: string;
+  num: number;
+  name: Tri;
+  /** 有沒有故事介紹 */
+  story: boolean;
+}
+
+export interface Chroma {
+  id: number;
+  name: Tri;
+  image: string;
+  colors: string[];
+}
+
+export interface ChromaGroup {
+  skinId: number;
+  champion: string;
+  skinName: Tri;
+  chromas: Chroma[];
+}
+
+/** 收藏裡的一件東西：表情、頭像、偵察守衛、終結特效 */
+export interface Collectible {
+  id: number;
+  name: Tri;
+  description?: Tri<Rich>;
+  /** 圖片網址（連網載入） */
+  image: string;
+  /** 頭像的發行年份 */
+  year?: number;
+}
+
+export type CollectibleKind = 'emotes' | 'icons' | 'wards' | 'finishers';
+
+/** 收藏頁上方的欄目，照遊戲順序 */
+export type CollectionTab = 'champions' | 'skins' | 'emotes' | 'runes' | 'spells' | 'items' | 'icons' | 'wards' | 'chromas' | 'finishers';
+
+/** 客戶端收藏頁的官方介面文字 */
+export interface CollectionLabels {
+  tabs: Record<CollectionTab, Tri>;
+  /** 符文系別的兩行標語，例如巫術：釋放破壞／強化技能、資源掌控 */
+  runeTrees: Record<string, { slogan: Tri; tagline: Tri }>;
+  keystones: Tri;
+  /** 召喚師技能可用的模式名稱，鍵是 Data Dragon 的模式代號（CLASSIC 等） */
+  spellModes: Record<string, Tri>;
+  summonerLevel: Tri;
+  /** 「冷卻時間： {{duration}} 秒」 */
+  cooldown: Tri;
+  search: Tri;
+  allChampions: Tri;
+  alphabetical: Tri;
+  /** 符文頁右邊插畫的網址開頭，後面接 /系別編號/environment.jpg、construct.png、keystones/符文編號.png、second/副系編號.png */
+  runeArt: string;
 }
 
 export type QuoteLang = Lang | 'ko';
@@ -172,6 +237,10 @@ export interface SummonerSpell {
   description: Tri<Rich>;
   cooldown: string;
   icon: string;
+  /** 召喚師幾級可以用 */
+  summonerLevel: number;
+  /** 可用的模式代號（CLASSIC、ARAM…） */
+  modes: string[];
 }
 
 /** 詞典的一個詞條 */
@@ -239,7 +308,7 @@ export interface LookupResult {
 
 /** 卡片出處 */
 export interface SourceRef {
-  type: 'champion' | 'passive' | 'spell' | 'skin' | 'quote' | 'item' | 'rune' | 'shard' | 'summoner';
+  type: 'champion' | 'passive' | 'spell' | 'skin' | 'quote' | 'item' | 'rune' | 'shard' | 'summoner' | 'emote' | 'icon' | 'ward' | 'finisher';
   /** 例如 Ahri、Ahri/Q、3157、Aatrox/base/pick-1 */
   id: string;
   /** 顯示用名稱，例如「阿璃 Q」 */
@@ -455,6 +524,10 @@ export interface SharedModule {
   loadItems(): Promise<Item[]>;
   loadRunes(): Promise<RuneData>;
   loadSummoners(): Promise<SummonerSpell[]>;
+  loadSkinCards(): Promise<SkinCard[]>;
+  loadChromas(): Promise<ChromaGroup[]>;
+  loadCollectibles(kind: CollectibleKind): Promise<Collectible[]>;
+  loadCollectionLabels(): Promise<CollectionLabels>;
   lookupWord(key: string): Promise<LookupResult>;
   /** 語料庫裡的檔案網址，例如圖示 */
   corpusUrl(path: string): string;

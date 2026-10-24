@@ -27,6 +27,10 @@ export {
   loadMeta,
   loadRunes,
   loadSummoners,
+  loadSkinCards,
+  loadChromas,
+  loadCollectibles,
+  loadCollectionLabels,
 } from './data.ts';
 export { recognitionQuestion } from './challenge.ts';
 export { lookupWord } from './dict.ts';

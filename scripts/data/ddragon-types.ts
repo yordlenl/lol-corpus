@@ -83,6 +83,7 @@ export interface DDSummoner {
   name: string;
   description: string;
   cooldownBurn: string;
+  summonerLevel: number;
   modes: string[];
   image: DDImage;
 }

@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-// 裝備商店和符文頁的互動：資料直接從 public/data 讀，不經過網路。
+// 裝備商店和符文頁（清單、格子兩種檢視）的互動：資料直接從 public/data 讀，不經過網路。
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -15,6 +15,10 @@ vi.mock('../../shared/index.ts', () => {
 
 const { PageItems } = await import('./items.ts');
 const { PageRunes } = await import('./runes.ts');
+const { RuneGrid } = await import('./rune-grid.ts');
+const { defaultPicks } = await import('./rune-picks.ts');
+const runeData = JSON.parse(readFileSync('public/data/runes.json', 'utf8'));
+const labels = JSON.parse(readFileSync('public/data/collection/labels.json', 'utf8'));
 
 async function mount<T extends HTMLElement & { updateComplete: Promise<boolean> }>(el: T, ready: (el: T) => boolean) {
   document.body.append(el);
@@ -101,14 +105,22 @@ describe('裝備商店', () => {
   });
 });
 
-describe('符文頁', () => {
-  const mountRunes = () => mount(new PageRunes(), (p) => Boolean(p.querySelector('.rune-page')));
+describe('符文頁（格子檢視）', () => {
+  const mountRunes = () => {
+    const grid = new RuneGrid();
+    grid.data = runeData;
+    grid.picks = defaultPicks(runeData);
+    return mount(grid, (p) => Boolean(p.querySelector('.rune-page')));
+  };
 
-  it('點符文：選起來並跳出說明；點別的地方就關掉', async () => {
+  it('點符文：選起來並跳出說明、通知外面；點別的地方就關掉', async () => {
     const page = await mountRunes();
+    let changed = 0;
+    page.addEventListener('picks-change', () => changed++);
     const second = page.querySelectorAll<HTMLButtonElement>('.primary .keystones .rune-pick')[1];
     second.click();
     await page.updateComplete;
+    expect(changed).toBe(1);
     expect(page.querySelector('.primary .keystones .rune-pick.on')).toBe(second);
     expect(page.querySelector('.rune-tip')?.getAttribute('aria-label')).toBe(second.getAttribute('aria-label'));
 
@@ -138,5 +150,65 @@ describe('符文頁', () => {
     await page.updateComplete;
     expect(row.querySelectorAll('.rune-pick.on')).toHaveLength(1);
     expect(third.classList.contains('on')).toBe(true);
+  });
+});
+
+describe('符文頁（清單檢視，照遊戲的選符文畫面）', () => {
+  const mountEditor = () => {
+    const page = new PageRunes();
+    page.labels = labels;
+    return mount(page, (p) => Boolean(p.querySelector('.rune-editor')));
+  };
+  const lineNames = (page: Element, side: string) => [...page.querySelectorAll(`.${side} .rune-line-name`)].map((n) => n.textContent);
+
+  it('主系顯示系別名稱和兩行官方標語、關鍵符文和三排小符文；副系兩個符文和三排碎片', async () => {
+    const page = await mountEditor();
+    const head = page.querySelector('.primary .rune-tree-text')!.textContent!.replace(/\s+/g, '');
+    expect(head).toBe(`精準${labels.runeTrees.Precision.slogan.zh_TW}${labels.runeTrees.Precision.tagline.zh_TW}`.replace(/\s+/g, ''));
+    expect(page.querySelector('.primary .keystone-heading')?.textContent).toBe(labels.keystones.zh_TW);
+    expect(lineNames(page, 'primary')).toHaveLength(4);
+    expect(lineNames(page, 'secondary')).toHaveLength(2);
+    expect(page.querySelectorAll('.secondary .rune-line.shard')).toHaveLength(3);
+  });
+
+  it('點關鍵符文的圖示跳出那一排的選項，選了就換掉並跳出說明', async () => {
+    const page = await mountEditor();
+    page.querySelector<HTMLButtonElement>('.primary .rune-line.keystone .rune-line-icon')!.click();
+    await page.updateComplete;
+    const options = page.querySelectorAll<HTMLButtonElement>('.primary .rune-choices-row .rune-choice');
+    expect(options).toHaveLength(runeData.trees.find((t: { key: string }) => t.key === 'Precision').slots[0].length);
+    options[2].click();
+    await page.updateComplete;
+    expect(page.querySelector('.primary .rune-choices-row')).toBeNull();
+    expect(lineNames(page, 'primary')[0]).toBe(options[2].getAttribute('aria-label'));
+    expect(page.querySelector('.rune-tip')?.getAttribute('aria-label')).toBe(options[2].getAttribute('aria-label'));
+  });
+
+  it('副系的選項是三排共九個；換主系成副系那一系時兩系對調', async () => {
+    const page = await mountEditor();
+    page.querySelector<HTMLButtonElement>('.secondary .rune-line .rune-line-icon')!.click();
+    await page.updateComplete;
+    expect(page.querySelectorAll('.secondary .rune-choices-row .rune-choice')).toHaveLength(9);
+
+    page.querySelector<HTMLButtonElement>('.primary .rune-tree-ring')!.click();
+    await page.updateComplete;
+    page.querySelector<HTMLButtonElement>('.primary .rune-choice.tree[aria-label="征服"]')!.click();
+    await page.updateComplete;
+    expect(page.querySelector('.primary .rune-tree-name')?.textContent).toBe('征服');
+    expect(page.querySelector('.secondary .rune-tree-name')?.textContent).toBe('精準');
+  });
+
+  it('切到格子檢視，選的還是一樣；在格子裡改了，切回清單也跟著改', async () => {
+    const page = await mountEditor();
+    page.querySelector<HTMLButtonElement>('.rune-view-toggle button[aria-label="格子"]')!.click();
+    await page.updateComplete;
+    const grid = page.querySelector('rune-grid')!;
+    await (grid as unknown as { updateComplete: Promise<boolean> }).updateComplete;
+    const keystone = grid.querySelectorAll<HTMLButtonElement>('.primary .keystones .rune-pick')[3];
+    keystone.click();
+    await page.updateComplete;
+    page.querySelector<HTMLButtonElement>('.rune-view-toggle button[aria-label="清單"]')!.click();
+    await page.updateComplete;
+    expect(lineNames(page, 'primary')[0]).toBe(keystone.getAttribute('aria-label'));
   });
 });

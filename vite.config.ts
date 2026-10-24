@@ -24,7 +24,19 @@ export default defineConfig({
         // 新版本下載好就立刻接手，不用等 App 完全關掉再開（我們自己註冊 service worker，外掛不會自動加這兩項）
         skipWaiting: true,
         clientsClaim: true,
-        globPatterns: ['**/*.{html,js,css,json,png}'],
+        globPatterns: ['**/*.{html,js,css,json,png}', 'img/client/*.{svg,jpg}'],
+        // 收藏頁的大圖（英雄卡片、造型、頭像…）不預先下載；看過的存起來，之後離線也看得到
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/(ddragon\.leagueoflegends\.com|raw\.communitydragon\.org)\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'collection-images',
+              expiration: { maxEntries: 3000, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,

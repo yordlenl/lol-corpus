@@ -4,7 +4,7 @@
 
 - 網址：<https://yordlenl.github.io/lol-corpus/>（iPad 上從主畫面的「LoL 英語」打開，再切到語料庫）
 - 規格：[docs/spec.md](docs/spec.md)
-- 目前進度：第六階段完成（照遊戲截圖重做裝備商店和符文頁），下一步是第七階段（查詞擴充）
+- 目前進度：第八階段（客戶端外殼＋收藏：首頁、「開始」、收藏的十個欄目）；第七階段查詞擴充暫緩
 
 ## 常用指令
 
@@ -41,6 +41,8 @@
 | --- | --- |
 | 技能、裝備、符文、召喚師技能、皮膚名、圖示 | Riot [Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon)（en_US／zh_TW／zh_CN） |
 | 屬性碎片；裝備的職業和商店分區（遊戲本體的官方欄位）；商店篩選圖示（從遊戲商店圖集切出）；Data Dragon 描述空白的裝備（「世界地圖」）和升級後裝備（例如芬布爾之冬）的三語官方描述；遊戲裡依英雄屬性即時計算的數字，官方文字沒寫，頁面上標成「依英雄屬性計算」 | [CommunityDragon](https://www.communitydragon.org/) |
+| 收藏頁：造型名稱與故事介紹、炫彩造型、表情、頭像、偵察守衛、終結特效；收藏頁的欄目名稱、符文系別標語、召喚師技能模式名稱；客戶端介面圖（書包圖示、收藏背景、符文頁插畫） | [CommunityDragon](https://www.communitydragon.org/)（三語官方資料；大圖連網載入，不存進倉庫） |
+| 英雄直式卡片圖、造型大圖、首頁大圖 | Riot Data Dragon（連網載入；首頁大圖存進倉庫） |
 | 選用／禁用台詞與原聲 | League of Legends Wiki，經 [lol-english](https://github.com/carefreelove/lol-english) 整理，CC BY-SA 3.0（見 [content/README.md](content/README.md)） |
 | 音標與釋義 | [ECDICT](https://github.com/skywind3000/ECDICT)（MIT），釋義用 OpenCC 轉成繁體 |
 

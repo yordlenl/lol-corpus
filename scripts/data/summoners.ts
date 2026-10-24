@@ -21,5 +21,7 @@ export function buildSummoners(
       },
       cooldown: s.cooldownBurn,
       icon: `img/summoner/${s.image.full}`,
+      summonerLevel: s.summonerLevel,
+      modes: s.modes,
     }));
 }

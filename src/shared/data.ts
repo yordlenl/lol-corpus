@@ -2,6 +2,11 @@
 import type {
   Champion,
   ChampionSummary,
+  ChromaGroup,
+  Collectible,
+  CollectibleKind,
+  CollectionLabels,
+  SkinCard,
   Dictionary,
   Item,
   Meta,
@@ -43,6 +48,11 @@ export const loadRunes = () => load<RuneData>('runes.json');
 export const loadSummoners = () => load<SummonerSpell[]>('summoners.json');
 export const loadWordlists = () => load<Wordlists>('wordlists.json');
 export const loadDictionary = () => load<Dictionary>('dict.json');
+/** 收藏：造型格子、炫彩、表情／頭像／守衛／終結特效、介面文字（用到才載入） */
+export const loadSkinCards = () => load<SkinCard[]>('collection/skins.json');
+export const loadChromas = () => load<ChromaGroup[]>('collection/chromas.json');
+export const loadCollectibles = (kind: CollectibleKind) => load<Collectible[]>(`collection/${kind}.json`);
+export const loadCollectionLabels = () => load<CollectionLabels>('collection/labels.json');
 /** 專有名詞（英文，長的在前），挖空時避開 */
 export const loadNames = () => load<string[]>('names.json');
 

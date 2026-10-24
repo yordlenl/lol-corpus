@@ -76,64 +76,265 @@ button {
   font: inherit;
 }
 
-/* ---------- 上方導覽列 ---------- */
+/* ---------- 客戶端：上方導覽列 ---------- */
 
-.topbar {
+:root {
+  --nav-h: 64px;
+  --tabs-h: 52px;
+  /* 收藏裡一頁可用的高度（導覽列、欄目列以下） */
+  --page-h: calc(100dvh - var(--nav-h) - var(--tabs-h) - env(safe-area-inset-top));
+}
+
+.client-nav {
   position: sticky;
   top: 0;
   z-index: 10;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 8px 20px;
-  padding: calc(10px + env(safe-area-inset-top)) 24px 10px;
-  background: rgba(1, 10, 19, 0.95);
+  gap: 18px;
+  height: calc(var(--nav-h) + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) 20px 0 14px;
+  background: linear-gradient(180deg, #0a1428, #010a13);
   border-bottom: 1px solid var(--gold-dark);
-  backdrop-filter: blur(6px);
+  box-shadow: 0 1px 0 rgba(200, 170, 110, 0.15);
 }
 
-.brand {
-  color: var(--gold);
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-decoration: none;
+.client-logo img {
+  display: block;
 }
 
-.nav {
-  display: flex;
-  gap: 4px;
-}
-
-.nav a {
-  padding: 8px 14px;
-  color: var(--text);
-  text-decoration: none;
-  border: 1px solid transparent;
-}
-
-.nav a.current {
+/* 「開始」按鈕：客戶端左上角的藍框箭頭按鈕 */
+.play-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 150px;
+  height: 42px;
+  margin-left: -26px;
+  padding: 0 32px 0 34px;
   color: var(--gold-light);
-  border-color: var(--gold);
-  background: #1e2328;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  background: linear-gradient(180deg, #1e2d3d, #0b1a26);
+  border: 2px solid #0ac8b9;
+  border-left: 0;
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%);
+  box-shadow: inset 0 0 12px rgba(10, 200, 185, 0.35);
 }
 
-.toggles {
+.play-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-right: 2px solid #0ac8b9;
+  clip-path: polygon(calc(100% - 20px) 0, 100% 50%, calc(100% - 20px) 100%);
+}
+
+.nav-icons {
+  display: flex;
   margin-left: auto;
 }
 
-.switch {
-  padding: 8px 0;
-  font-weight: 600;
-  text-decoration: none;
+.nav-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: var(--nav-h);
+  opacity: 0.85;
 }
 
-/* ---------- 共通版面 ---------- */
+.nav-icon.on {
+  opacity: 1;
+  background: linear-gradient(180deg, transparent, rgba(200, 170, 110, 0.12));
+}
 
-.content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px 24px 40px;
+/* 選中的圖示上方有一個小小的金色箭頭，和客戶端一樣 */
+.nav-icon.on::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 22px;
+  height: 10px;
+  transform: translateX(-50%);
+  background: var(--gold);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.toggles {
+  --lol-toggle-text: #a09b8c;
+}
+
+/* ---------- 客戶端：首頁 ---------- */
+
+.client-home {
+  position: relative;
+  min-height: calc(100dvh - var(--nav-h) - env(safe-area-inset-top));
+  background: linear-gradient(90deg, rgba(1, 10, 19, 0.75), transparent 45%), var(--home-bg) center 20% / cover no-repeat, #010a13;
+}
+
+.home-footer {
+  position: absolute;
+  left: 24px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  max-width: 560px;
+  color: rgba(240, 230, 210, 0.7);
+  font-size: 12px;
+  text-shadow: 0 1px 3px #000;
+}
+
+.home-footer p {
+  margin: 3px 0;
+}
+
+/* ---------- 收藏 ---------- */
+
+.collection {
+  position: relative;
+  min-height: calc(100dvh - var(--nav-h) - env(safe-area-inset-top));
+  background: url('/lol-corpus/img/client/collection-bg.png') left top / 121% 100% no-repeat, #010a13;
+}
+
+.collection-tabs {
+  display: flex;
+  gap: 4px;
+  height: var(--tabs-h);
+  padding: 0 64px 0 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.collection-tab {
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 0 14px;
+  color: #a09b8c;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+
+.collection-tab.on {
+  color: var(--gold-light);
+  border-bottom-color: var(--gold-light);
+}
+
+.collection-close {
+  position: absolute;
+  top: 8px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--gold-light);
+  font-size: 18px;
+  text-decoration: none;
+  background: #010a13;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+}
+
+.collection-page {
+  height: var(--page-h);
+  min-height: 480px;
+}
+
+.collection-split {
+  display: flex;
+  gap: 24px;
+  height: 100%;
+  padding: 12px 20px 0;
+}
+
+.control-panel {
+  flex: 0 0 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 6px;
+}
+
+.collection-scroll {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  padding: 6px 4px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold-dark) transparent;
+}
+
+.collection-toolbar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.client-search {
+  width: 100%;
+  max-width: 320px;
+  min-height: 42px;
+  padding: 0 12px 0 36px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--gold-light);
+  background: #010a13
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='6.5' cy='6.5' r='5' fill='none' stroke='%23a09b8c' stroke-width='1.6'/%3E%3Cpath d='M10.2 10.2 15 15' stroke='%23a09b8c' stroke-width='1.8'/%3E%3C/svg%3E")
+    12px center / 16px no-repeat;
+  border: 1px solid #785a28;
+  border-radius: 0;
+}
+
+.client-select {
+  min-height: 42px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  color: var(--gold-light);
+  background: #1e2328;
+  border: 1px solid #785a28;
+  border-radius: 0;
+  appearance: none;
+  cursor: pointer;
+}
+
+.client-check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 15px;
+}
+
+.control-count {
+  margin: 0;
+  color: #a09b8c;
+  font-size: 14px;
+}
+
+.grow-sentinel {
+  display: block;
+  margin: 18px auto;
+  padding: 8px 18px;
+  font: inherit;
+  color: var(--gold-light);
+  background: #1e2328;
+  border: 1px solid var(--gold-dark);
+  cursor: pointer;
+}
+
+/* ---------- 共通 ---------- */
+
+.client-main {
+  display: block;
 }
 
 .panel {
@@ -149,154 +350,496 @@ button {
   text-align: center;
 }
 
-.section-title {
-  margin: 28px 0 12px;
-  color: var(--gold);
-  font-size: 18px;
-  letter-spacing: 0.06em;
-}
+/* ---------- 收藏 → 英雄、造型（直式卡片） ---------- */
 
-.mini-title {
-  margin: 20px 0 8px;
-  color: var(--gold);
-  font-size: 15px;
-}
-
-.stack {
+.champion-cards {
   display: grid;
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 18px 14px;
 }
 
-.back {
-  display: inline-block;
-  margin-bottom: 12px;
-  text-decoration: none;
-}
-
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.search {
-  width: 100%;
-  max-width: 360px;
-  min-height: 44px;
-  padding: 0 14px;
-  font: inherit;
-  color: var(--gold-light);
-  background: #010a13;
-  border: 1px solid var(--gold-dark);
-  border-radius: 0;
-}
-
-.split-main > .search {
-  margin-bottom: 4px;
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.chip {
-  min-height: 40px;
-  padding: 0 14px;
-  color: var(--text);
-  background: transparent;
-  border: 1px solid var(--gold-dark);
-  cursor: pointer;
-}
-
-.chip.on {
-  color: var(--gold-light);
-  border-color: var(--gold);
-  background: #1e2328;
-}
-
-/* 左邊列表、右邊說明 */
-.split {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
-  gap: 20px;
-  align-items: start;
-}
-
-.split-side {
-  position: sticky;
-  top: 76px;
-  max-height: calc(100vh - 96px);
-  overflow: auto;
-}
-
-@media (max-width: 900px) {
-  .split {
-    grid-template-columns: 1fr;
-  }
-  .split-side {
-    position: static;
-    max-height: none;
-  }
-}
-
-/* ---------- 英雄 ---------- */
-
-.champion-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 10px;
-}
-
-.champion-tile {
+.champion-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 6px;
-  padding: 12px 8px;
+  color: var(--gold-light);
   text-align: center;
   text-decoration: none;
 }
 
-.champion-tile:hover {
-  background: var(--panel-hover);
-  border-color: var(--gold);
+.card-art {
+  display: block;
+  aspect-ratio: 5 / 6.4;
+  overflow: hidden;
+  background: #1e2328;
+  border: 1px solid #3c3c41;
 }
 
-.champion-tile img {
+.card-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 12%;
+  transition: transform 0.2s;
+}
+
+.champion-card:hover .card-art img {
+  transform: scale(1.04);
+}
+
+.card-name {
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.card-en {
+  display: block;
+  color: #a09b8c;
+  font-size: 12px;
+}
+
+/* ---------- 收藏 → 英雄 → 一位英雄 ---------- */
+
+.champion-detail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.champion-bar {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 8px 20px;
+  background: linear-gradient(90deg, rgba(1, 10, 19, 0.92), rgba(1, 10, 19, 0.6));
+  border-top: 1px solid var(--gold-dark);
+  border-bottom: 1px solid var(--gold-dark);
+}
+
+.champion-back {
+  color: var(--gold);
+  font-size: 30px;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.champion-bar-icon {
   border: 1px solid var(--gold-dark);
 }
 
-.champion-head {
+.champion-bar-name {
+  color: var(--gold-light);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.champion-bar-title {
+  color: #cdbe91;
+  font-size: 14px;
+}
+
+.champion-bar-name span,
+.champion-bar-title span {
+  margin-left: 10px;
+  color: #a09b8c;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.champion-sections {
   display: flex;
-  gap: 20px;
-  align-items: center;
+  gap: 8px;
+  margin-left: 40px;
 }
 
-.champion-head img {
+.champion-section {
+  padding: 10px 14px;
+  color: #a09b8c;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+
+.champion-section.on {
+  color: var(--gold-light);
+  border-bottom-color: var(--gold-light);
+}
+
+.champion-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* 技能：純色背景，一排圖示，下面是選到那一招的說明 */
+.champion-skills {
+  min-height: 100%;
+  padding: 24px 32px 32px;
+  background: #0a0f14;
+}
+
+.ability-icons {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.ability-icon {
+  position: relative;
+  padding: 0;
+  background: none;
+  border: 2px solid #3c3c41;
+  cursor: pointer;
+}
+
+.ability-icon img {
+  display: block;
+  filter: brightness(0.6);
+}
+
+.ability-icon.on {
+  border-color: var(--gold);
+  box-shadow: 0 0 10px rgba(200, 170, 110, 0.5);
+}
+
+.ability-icon.on img {
+  filter: none;
+}
+
+.ability-key {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  min-width: 22px;
+  padding: 0 4px;
+  color: var(--gold-light);
+  font-size: 12px;
+  font-weight: 700;
+  background: #010a13;
+  border: 1px solid var(--gold-dark);
+}
+
+.ability-detail {
+  max-width: 880px;
+}
+
+.champion-quotes {
+  display: grid;
+  gap: 12px;
+  max-width: 980px;
+  padding: 20px 24px 32px;
+}
+
+/* 造型：大圖鋪滿，下方是名字、圓點和縮圖 */
+.skin-viewer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 100%;
+  background: linear-gradient(180deg, transparent 55%, rgba(1, 10, 19, 0.95)), var(--splash) center 25% / cover no-repeat, #010a13;
+  touch-action: pan-y;
+}
+
+.skin-story {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  width: min(380px, 40%);
+  max-height: calc(100% - 210px);
+  overflow-y: auto;
+  padding: 14px 16px;
+  background: rgba(1, 10, 19, 0.82);
+  border: 1px solid var(--gold-dark);
+}
+
+.skin-story-name {
+  --lol-en-size: 1.05em;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.skin-strip {
+  padding: 0 20px 16px;
+  text-align: center;
+}
+
+.skin-title {
+  color: var(--gold-light);
+  font-size: 26px;
+  font-style: italic;
+  font-weight: 700;
+  text-shadow: 0 2px 6px #000;
+}
+
+.skin-title-en {
+  display: block;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  color: #cdbe91;
+}
+
+.skin-dots {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px auto 12px;
+  padding-top: 8px;
+  max-width: 900px;
+  border-top: 1px solid var(--gold-dark);
+}
+
+.skin-dot {
+  width: 9px;
+  height: 9px;
   border: 1px solid var(--gold);
+  border-radius: 50%;
 }
 
-.champion-name {
+.skin-dot.on {
+  background: var(--gold);
+}
+
+.skin-thumbs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+}
+
+.skin-arrow {
+  width: 44px;
+  height: 64px;
+  color: var(--gold);
+  font-size: 44px;
+  line-height: 1;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.skin-thumb {
+  display: block;
+  width: 132px;
+  height: 76px;
+  overflow: hidden;
+  border: 2px solid #3c3c41;
+}
+
+.skin-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.7);
+}
+
+.skin-thumb.on {
+  border-color: var(--gold);
+}
+
+.skin-thumb.on img {
+  filter: none;
+}
+
+/* ---------- 收藏 → 表情、頭像、偵察守衛、終結特效 ---------- */
+
+.collectibles .collection-scroll {
+  padding-right: 8px;
+}
+
+.collectible-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 16px 10px;
+}
+
+.collectibles[data-kind='finishers'] .collectible-grid {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.collectible {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--gold-light);
+  font-size: 13px;
+  line-height: 1.3;
+  text-align: center;
+  text-decoration: none;
+}
+
+.collectible-art {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  border: 2px solid transparent;
+  border-radius: 4px;
+}
+
+.collectibles[data-kind='icons'] .collectible-art img {
+  border: 1px solid var(--gold-dark);
+  border-radius: 50%;
+}
+
+.collectibles[data-kind='finishers'] .collectible-art {
+  width: 190px;
+  height: 110px;
+}
+
+.collectible-art img {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.collectible.on .collectible-art {
+  border-color: var(--gold);
+}
+
+.collectible-side {
+  flex: 0 0 340px;
+  overflow-y: auto;
+  padding: 10px 0 24px;
+}
+
+.collectible-detail {
+  padding: 18px;
+  background: rgba(1, 10, 19, 0.85);
+  border: 1px solid var(--gold-dark);
+}
+
+.collectible-big {
+  display: block;
+  max-width: 100%;
+  max-height: 200px;
+  margin: 0 auto 14px;
+}
+
+.collectible-year {
+  margin: 6px 0;
+  color: #a09b8c;
+  font-size: 13px;
+}
+
+/* ---------- 收藏 → 炫彩造型 ---------- */
+
+.chromas {
+  padding: 12px 20px 24px;
+}
+
+.chroma-group {
+  margin-bottom: 20px;
+}
+
+.chroma-skin {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.chroma-skin a {
+  color: var(--gold-light);
+  text-decoration: none;
+}
+
+.chroma-skin span,
+.chroma figcaption span {
+  display: block;
+  color: #a09b8c;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.chroma-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.chroma {
+  width: 120px;
+  margin: 0;
+  text-align: center;
+}
+
+.chroma img {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+}
+
+.chroma figcaption {
+  color: var(--gold-light);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+/* ---------- 收藏 → 召喚師技能 ---------- */
+
+.spells-page {
+  width: min(560px, 100%);
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px 28px;
+  background: linear-gradient(90deg, rgba(1, 10, 19, 0.85), rgba(1, 10, 19, 0.5));
+}
+
+.spell-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 104px);
+  gap: 18px 24px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--gold-dark);
+}
+
+.spell-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #a09b8c;
+  font-size: 15px;
+  text-decoration: none;
+}
+
+.spell-cell img {
+  width: 76px;
+  height: 76px;
+  border: 2px solid #3c3c41;
+}
+
+.spell-cell.on {
+  color: var(--gold-light);
+}
+
+.spell-cell.on img {
+  border-color: var(--gold);
+}
+
+.spell-info {
+  max-width: 560px;
+  padding-top: 18px;
+}
+
+.spell-info-name {
   --lol-en-size: 1.6em;
   font-weight: 700;
 }
 
-.champion-title {
-  margin-top: 4px;
+.spell-level,
+.spell-modes,
+.spell-cooldown {
+  margin: 6px 0;
+  color: #a09b8c;
 }
 
-.skin-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 10px;
-}
-
-.skin {
-  padding: 10px 14px;
+.spell-level {
+  color: var(--gold-light);
+  font-weight: 700;
 }
 
 /* ---------- 裝備商店（照遊戲商店） ---------- */
@@ -308,7 +851,8 @@ button {
   --shop-cyan: #0ac8b9;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 452px;
-  height: max(560px, calc(100dvh - 128px));
+  height: calc(var(--page-h) - 24px);
+  margin: 12px 20px 0;
   color: var(--text);
   /* 遊戲商店是偏青的深藍 */
   background: linear-gradient(180deg, #0e2633, #0a1b26 40%, #08141d);
@@ -712,7 +1256,8 @@ button {
   display: grid;
   grid-template-columns: 1.15fr 1fr;
   gap: 24px;
-  min-height: max(540px, calc(100dvh - 128px));
+  min-height: calc(var(--page-h) - 24px);
+  margin: 12px 20px 0;
   padding: 24px 32px 28px;
   background: radial-gradient(ellipse at 20% 0%, rgba(30, 35, 40, 0.6), transparent 60%), #0b0e13;
   border: 1px solid var(--gold-dark);
@@ -972,17 +1517,262 @@ button {
   }
 }
 
-/* ---------- 頁尾 ---------- */
 
-.footer {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 16px 24px calc(32px + env(safe-area-inset-bottom));
-  color: #5b5a56;
-  font-size: 13px;
-  border-top: 1px solid rgba(120, 90, 40, 0.4);
+/* ---------- 收藏 → 符文（清單檢視，照遊戲的選符文畫面） ---------- */
+
+.rune-editor,
+.rune-grid-view {
+  position: relative;
+  height: var(--page-h);
+  overflow-y: auto;
+  background: #05080d;
 }
 
-.footer p {
-  margin: 4px 0;
+.rune-art {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #05080d 28%, rgba(5, 8, 13, 0.4) 55%, transparent 75%), var(--env) right center / cover no-repeat;
+  pointer-events: none;
+}
+
+.rune-art-stack {
+  position: absolute;
+  right: 1%;
+  bottom: 2%;
+  height: 76%;
+  aspect-ratio: 700 / 720;
+}
+
+.rune-art-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.rune-art-layer.keystone {
+  inset: 3% 7%;
+  width: 86%;
+  height: 93%;
+}
+
+.rune-cols {
+  position: relative;
+  display: grid;
+  grid-template-columns: 370px 310px;
+  gap: 28px;
+  padding: 26px 32px 90px;
+}
+
+.rune-editor button {
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+}
+
+.rune-tree-head {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.rune-tree-ring {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--tree), 0 0 14px color-mix(in srgb, var(--tree) 40%, transparent);
+  background: radial-gradient(circle, color-mix(in srgb, var(--tree) 18%, #05080d), #05080d 70%) !important;
+}
+
+.rune-tree-ring.open {
+  box-shadow: inset 0 0 0 3px var(--tree), 0 0 22px var(--tree);
+}
+
+.rune-tree-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.45;
+}
+
+.rune-tree-name {
+  color: var(--tree);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.rune-tree-line {
+  color: #a09b8c;
+  font-size: 15px;
+}
+
+.rune-col-body {
+  position: relative;
+  margin: 6px 0 0 41px;
+  padding-left: 0;
+  border-left: 2px solid color-mix(in srgb, var(--tree) 45%, #1e2328);
+}
+
+.keystone-heading {
+  margin: 6px 0 2px 22px;
+  color: var(--tree);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+}
+
+.rune-line {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-left: -33px;
+  padding: 10px 0;
+}
+
+.rune-line.keystone {
+  margin-left: -56px;
+  padding: 6px 0 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--tree) 35%, transparent);
+}
+
+.rune-line-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #05080d !important;
+}
+
+.rune-line-icon img {
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--tree);
+}
+
+.rune-line.keystone .rune-line-icon img {
+  box-shadow: 0 0 18px color-mix(in srgb, var(--tree) 60%, transparent);
+}
+
+.rune-line-icon.open img {
+  box-shadow: 0 0 0 3px var(--gold-light), 0 0 14px var(--tree);
+}
+
+.rune-line-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.5;
+}
+
+.rune-line-name {
+  color: var(--tree);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.rune-line.keystone .rune-line-name {
+  font-size: 20px;
+  color: var(--gold-light);
+}
+
+.rune-line-short {
+  color: #cdbe91;
+  font-size: 15px;
+}
+
+.shard-lines {
+  margin-top: 26px;
+  border-left: 2px solid color-mix(in srgb, var(--tree) 45%, #1e2328);
+  margin-left: -2px;
+}
+
+.rune-line.shard {
+  margin-left: -20px;
+  padding: 7px 0;
+}
+
+.rune-line.shard .rune-line-icon {
+  width: 38px;
+  height: 38px;
+  box-shadow: inset 0 0 0 2px var(--gold);
+}
+
+.rune-line.shard .rune-line-icon img {
+  box-shadow: none;
+}
+
+.rune-choices-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 2px 0 8px 22px;
+  padding: 10px 12px;
+  background: rgba(1, 10, 19, 0.85);
+  border: 1px solid color-mix(in srgb, var(--tree) 45%, transparent);
+}
+
+.rune-choices-row.trees {
+  margin: 12px 0 0;
+}
+
+.rune-choice {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.rune-choice img {
+  border-radius: 50%;
+  filter: grayscale(1) brightness(0.65);
+}
+
+.rune-choice.on img {
+  filter: none;
+  box-shadow: 0 0 0 2px var(--tree);
+}
+
+.rune-choice.tree img {
+  filter: brightness(0.65);
+}
+
+.rune-choice.tree.on img {
+  filter: none;
+  box-shadow: 0 0 0 2px var(--tree);
+}
+
+.rune-view-toggle {
+  position: absolute;
+  left: 32px;
+  bottom: 22px;
+  display: flex;
+}
+
+.rune-grid-view .rune-view-toggle {
+  position: sticky;
+  bottom: 12px;
+  width: max-content;
+  margin: 8px 20px 12px;
+}
+
+.rune-view-toggle button {
+  width: 44px;
+  height: 40px;
+  padding: 0;
+  color: #a09b8c;
+  font-size: 22px;
+  text-align: center;
+  background: #05080d;
+  border: 1px solid #3c3c41;
+  cursor: pointer;
+}
+
+.rune-view-toggle button.on {
+  color: var(--gold-light);
+  border-color: var(--gold);
 }

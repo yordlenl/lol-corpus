@@ -16,6 +16,8 @@ export const IMG_DIR = join(ROOT, 'public', 'img');
 
 export const DDRAGON = 'https://ddragon.leagueoflegends.com';
 export const CDRAGON = `https://raw.communitydragon.org/${CDRAGON_VERSION}/plugins/rcp-be-lol-game-data/global`;
+/** 客戶端各頁面的檔案（收藏頁的翻譯檔、介面圖） */
+export const CDRAGON_PLUGINS = `https://raw.communitydragon.org/${CDRAGON_VERSION}/plugins`;
 /** 遊戲本體的檔案（官方裝備欄位、文字檔、商店圖集） */
 export const CDRAGON_GAME = `https://raw.communitydragon.org/${CDRAGON_VERSION}/game`;
 

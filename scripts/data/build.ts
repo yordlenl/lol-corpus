@@ -12,6 +12,7 @@ import {
   CDRAGON,
   CDRAGON_GAME,
   CDRAGON_LOCALE,
+  CDRAGON_PLUGINS,
   CDRAGON_VERSION,
   CONTENT_DIR,
   DATA_DIR,
@@ -30,6 +31,20 @@ import type { CDItemBin, CDPerk, CDPerkStyles, DDChampion, DDItem, DDRuneTree, D
 import { buildDictionary } from './dictionary.ts';
 import { download, getJson, getText, mapLimit } from './http.ts';
 import { buildItems, fillMissingDescriptions } from './items.ts';
+import {
+  buildEmotes,
+  buildFinishers,
+  buildIcons,
+  buildLabels,
+  buildSkins,
+  buildWards,
+  type CDEmote,
+  type CDFinisher,
+  type CDIcon,
+  type CDSkin,
+  type CDWard,
+  parseClientJson,
+} from './collection.ts';
 import { decodePng, encodePng } from './png.ts';
 import { cutShopIcons, SHOP_ATLASES, type ShopAtlas } from './shop-icons.ts';
 import { cdragonAssetUrl, buildRunes } from './runes.ts';
@@ -59,6 +74,16 @@ async function cdragonGame<T>(path: string): Promise<T> {
   const cachePath = join(CACHE_DIR, 'cdragon', CDRAGON_VERSION, 'game', path);
   await download(`${CDRAGON_GAME}/${path}`, cachePath, { timeoutMs: 600_000 });
   return JSON.parse(await readFile(cachePath, 'utf8')) as T;
+}
+
+/** 客戶端收藏頁的翻譯檔（三語） */
+async function clientTrans(file: string, lang: Lang): Promise<Record<string, string>> {
+  const locale = CDRAGON_LOCALE[lang];
+  const text = await getText(
+    `${CDRAGON_PLUGINS}/rcp-fe-lol-collections/global/${locale}/${file}`,
+    join(CACHE_DIR, 'cdragon', CDRAGON_VERSION, 'collections', locale, file),
+  );
+  return parseClientJson(text);
 }
 
 async function perLang<T>(load: (lang: Lang) => Promise<T>): Promise<Record<Lang, T>> {
@@ -93,7 +118,7 @@ async function main() {
   console.log(`遊戲資料版本：Data Dragon ${DDRAGON_VERSION}、CommunityDragon ${CDRAGON_VERSION}`);
 
   console.log('[1/5] 下載三語資料…');
-  const [championFull, items, summoners, runeTrees, perks, perkStyles, itemBins, stringTables] = await Promise.all([
+  const [championFull, items, summoners, runeTrees, perks, perkStyles, itemBins, stringTables, cdSkins, cdEmotes, cdIcons, cdWards, cdFinishers, collectionTrans, perksTrans] = await Promise.all([
     perLang((l) => ddragon<{ data: Record<string, DDChampion> }>(l, 'championFull.json')),
     perLang((l) => ddragon<{ data: Record<string, DDItem> }>(l, 'item.json')),
     perLang((l) => ddragon<{ data: Record<string, DDSummoner> }>(l, 'summoner.json')),
@@ -102,6 +127,13 @@ async function main() {
     perLang((l) => cdragon<CDPerkStyles>(l, 'perkstyles.json')),
     cdragonGame<Record<string, CDItemBin>>('items.cdtb.bin.json'),
     perLang((l) => cdragonGame<StringTable>(`${STRINGTABLE_LOCALE[l]}/data/menu/en_us/lol.stringtable.json`)),
+    perLang(async (l) => Object.values(await cdragon<Record<string, CDSkin>>(l, 'skins.json'))),
+    perLang((l) => cdragon<CDEmote[]>(l, 'summoner-emotes.json')),
+    perLang((l) => cdragon<CDIcon[]>(l, 'summoner-icons.json')),
+    perLang((l) => cdragon<CDWard[]>(l, 'ward-skins.json')),
+    perLang((l) => cdragon<CDFinisher[]>(l, 'nexusfinishers.json')),
+    perLang((l) => clientTrans('trans.json', l)),
+    perLang((l) => clientTrans('trans-perks.json', l)),
   ]);
 
   console.log('[2/5] 整理英雄、台詞、裝備、符文、召喚師技能…');
@@ -117,6 +149,10 @@ async function main() {
       onUnknownTag,
     ),
   );
+  // 造型：原版也列，名稱和故事介紹用 CommunityDragon 的三語官方文字
+  const ddSkinIds = new Map(championIds.map((id) => [id, new Set(championFull.en.data[id].skins.filter((sk) => sk.parentSkin == null).map((sk) => sk.id))]));
+  const skinData = buildSkins(champions, ddSkinIds, cdSkins, onUnknownTag);
+  for (const c of champions) c.skins = skinData.perChampion.get(c.id) ?? [];
   const index: ChampionSummary[] = champions
     .map((c) => summarize({ en: championFull.en.data[c.id], zh_TW: championFull.zh_TW.data[c.id], zh_CN: championFull.zh_CN.data[c.id] }))
     .sort((a, b) => a.name.en.localeCompare(b.name.en));
@@ -130,6 +166,24 @@ async function main() {
   await writeData('runes.json', runes);
   const spells = buildSummoners({ en: summoners.en.data, zh_TW: summoners.zh_TW.data, zh_CN: summoners.zh_CN.data }, onUnknownTag);
   await writeData('summoners.json', spells);
+
+  // 收藏頁：造型格子、炫彩、表情、頭像、偵察守衛、終結特效、介面文字
+  const emotes = buildEmotes(cdEmotes, onUnknownTag);
+  const profileIcons = buildIcons(cdIcons, onUnknownTag);
+  const wards = buildWards(cdWards, onUnknownTag);
+  const finishers = buildFinishers(cdFinishers, onUnknownTag);
+  await writeData('collection/skins.json', skinData.cards);
+  await writeData('collection/chromas.json', skinData.chromas);
+  await writeData('collection/emotes.json', emotes);
+  await writeData('collection/icons.json', profileIcons);
+  await writeData('collection/wards.json', wards);
+  await writeData('collection/finishers.json', finishers);
+  await writeData('collection/labels.json', buildLabels(
+      collectionTrans,
+      perksTrans,
+      runes.trees.map((t) => t.key),
+      `${CDRAGON_PLUGINS}/rcp-fe-lol-collections/global/default/perks/images/construct`,
+    ));
 
   // 專有名詞清單（英文）：挖空時整個名稱都不挖。長的排前面，比對時先吃掉長名稱。
   const names = new Set<string>();
@@ -171,6 +225,11 @@ async function main() {
       icons.set(shard.icon, cdragonAssetUrl(CDRAGON, perk.iconPath));
     }
   }
+  // 客戶端介面圖：首頁大圖（K/DA ALL OUT 阿璃的造型大圖）、左上角標誌、書包（收藏）圖示、收藏頁背景
+  icons.set('img/client/home.jpg', `${DDRAGON}/cdn/img/champion/splash/Ahri_28.jpg`);
+  icons.set('img/client/league-logo.svg', `${CDRAGON_PLUGINS}/rcp-fe-lol-navigation/global/default/activity-center/league-logo-rest.svg`);
+  icons.set('img/client/nav-collections.svg', `${CDRAGON_PLUGINS}/rcp-fe-lol-static-assets/global/default/images/nav-icon-collections.svg`);
+  icons.set('img/client/collection-bg.png', `${CDRAGON_PLUGINS}/rcp-fe-lol-collections/global/default/images/background.png`);
   const downloaded = await syncIcons(icons);
 
   // 商店篩選圖示是從遊戲圖集切出來的，不在上面的下載清單裡（同步時會被當成舊檔刪掉），所以在這之後才寫
@@ -203,7 +262,10 @@ async function main() {
     addTri(c.passive.name);
     addTri(c.passive.description);
     for (const sp of c.spells) (addTri(sp.name), addTri(sp.description));
-    for (const sk of c.skins) addTri(sk.name);
+    for (const sk of c.skins) {
+      addTri(sk.name);
+      if (sk.description) addTri(sk.description);
+    }
     for (const q of c.quotes) {
       english.push(q.text.en);
       zhTW.push(q.text.zh_TW);
@@ -216,6 +278,11 @@ async function main() {
   }
   for (const row of runes.shards) for (const s of row.shards) (addTri(s.name), addTri(s.description));
   for (const s of spells) (addTri(s.name), addTri(s.description));
+  for (const group of skinData.chromas) for (const ch of group.chromas) addTri(ch.name);
+  for (const it of [...emotes, ...profileIcons, ...wards, ...finishers]) {
+    addTri(it.name);
+    if (it.description) addTri(it.description);
+  }
 
   const { dict, wordlists, report } = await buildDictionary({
     texts: english,
@@ -237,6 +304,12 @@ async function main() {
     runes: runes.trees.reduce((n, t) => n + t.slots.flat().length, 0),
     shards: runes.shards.reduce((n, r) => n + r.shards.length, 0),
     summoners: spells.length,
+    skinStories: skinData.cards.filter((c) => c.story).length,
+    chromas: skinData.chromas.reduce((n, g) => n + g.chromas.length, 0),
+    emotes: emotes.length,
+    profileIcons: profileIcons.length,
+    wards: wards.length,
+    finishers: finishers.length,
     icons: icons.size + shopIcons.size,
     dictWords: dict.meta.count,
   };

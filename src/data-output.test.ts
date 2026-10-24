@@ -3,7 +3,21 @@ import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { findSimplified } from '../scripts/data/chinese.ts';
 import { DDRAGON_VERSION } from '../scripts/data/config.ts';
-import type { Champion, ChampionSummary, Dictionary, Item, Meta, RuneData, SummonerSpell, Tri, Rich } from './shared/types.ts';
+import type {
+  Champion,
+  ChampionSummary,
+  ChromaGroup,
+  Collectible,
+  CollectionLabels,
+  Dictionary,
+  Item,
+  Meta,
+  RuneData,
+  SkinCard,
+  SummonerSpell,
+  Tri,
+  Rich,
+} from './shared/types.ts';
 import { richToPlain } from './shared/text.ts';
 
 const PUBLIC = new URL('../public/', import.meta.url);
@@ -16,9 +30,23 @@ const items = read<Item[]>('items.json');
 const runes = read<RuneData>('runes.json');
 const summoners = read<SummonerSpell[]>('summoners.json');
 const dict = read<Dictionary>('dict.json');
+const skinCards = read<SkinCard[]>('collection/skins.json');
+const chromas = read<ChromaGroup[]>('collection/chromas.json');
+const collectibles = {
+  emotes: read<Collectible[]>('collection/emotes.json'),
+  icons: read<Collectible[]>('collection/icons.json'),
+  wards: read<Collectible[]>('collection/wards.json'),
+  finishers: read<Collectible[]>('collection/finishers.json'),
+};
+const labels = read<CollectionLabels>('collection/labels.json');
 
 /** Riot 台服官方資料裡本來就有的簡體字（不是我們轉換造成的），列在這裡；出現新的就要檢查 */
 const OFFICIAL_KNOWN = new Set(['并']);
+/**
+ * 收藏頁資料裡的：雇（雇主）、祢 是繁體也通用的字，只是檢查表把它們當成簡體；
+ * 强、嘘、赛、铜 是台服資料本身就寫成簡體（一個表情「鵝鵝强化」「嘘」和一個頭像「2016 赛季 - 5v5 铜牌」）。
+ */
+const COLLECTION_KNOWN = new Set(['雇', '祢', '强', '嘘', '赛', '铜']);
 
 describe('遊戲資料', () => {
   it('版本與設定一致', () => {
@@ -139,6 +167,57 @@ describe('遊戲資料', () => {
   });
 });
 
+describe('收藏頁的資料（CommunityDragon 官方三語）', () => {
+  it('每位英雄的造型從原版開始，原版就叫英雄名；大多數造型有故事介紹', () => {
+    for (const c of champions) {
+      expect(c.skins[0]).toMatchObject({ num: 0, name: c.name });
+    }
+    const ahri = champions.find((c) => c.id === 'Ahri')!;
+    const kda = ahri.skins.find((s) => s.name.en === 'K/DA ALL OUT Ahri')!;
+    expect(richToPlain(kda.description!.en)).toContain('K/DA');
+    expect(richToPlain(kda.description!.zh_TW)).toMatch(/[\u4e00-\u9fff]/);
+    expect(skinCards.length).toBe(champions.reduce((n, c) => n + c.skins.length, 0));
+    expect(skinCards.filter((s) => s.story).length).toBeGreaterThan(1500);
+  });
+
+  it('炫彩、表情、頭像、偵察守衛、終結特效都有三語名稱和圖片網址', () => {
+    expect(chromas.reduce((n, g) => n + g.chromas.length, 0)).toBeGreaterThan(6000);
+    expect(collectibles.emotes.length).toBeGreaterThan(2000);
+    expect(collectibles.icons.length).toBeGreaterThan(5000);
+    expect(collectibles.wards.length).toBeGreaterThan(200);
+    expect(collectibles.finishers).toHaveLength(6);
+    for (const list of Object.values(collectibles)) {
+      for (const it of list) {
+        expect(it.name.en.trim()).not.toBe('');
+        expect(it.name.zh_TW.trim()).not.toBe('');
+        expect(it.image).toMatch(/^https:\/\/raw\.communitydragon\.org\/.+\.(png|jpg|jpeg)$/);
+      }
+    }
+  });
+
+  it('收藏頁的介面文字取自客戶端：十個欄目、五系符文標語、關鍵符文', () => {
+    expect(Object.values(labels.tabs).map((t) => t.zh_TW)).toEqual(['英雄', '造型', '表情', '符文', '召喚師技能', '道具', '頭像', '偵察守衛', '炫彩造型', '終結特效']);
+    expect(labels.runeTrees.Sorcery.slogan.zh_TW).toBe('釋放破壞');
+    expect(labels.runeTrees.Sorcery.tagline.zh_TW).toBe('強化技能、資源掌控');
+    expect(Object.keys(labels.runeTrees).sort()).toEqual(runes.trees.map((t) => t.key).sort());
+    expect(labels.keystones.zh_TW).toBe('關鍵符文');
+    expect(labels.spellModes.CLASSIC.zh_TW).toBe('經典模式');
+  });
+
+  it('召喚師技能有召喚師等級和可用模式', () => {
+    for (const s of summoners) {
+      expect(s.summonerLevel).toBeGreaterThan(0);
+      expect(s.modes).toContain('CLASSIC');
+    }
+  });
+
+  it('客戶端介面圖都下載了', () => {
+    for (const f of ['home.jpg', 'league-logo.svg', 'nav-collections.svg', 'collection-bg.png']) {
+      expect(existsSync(new URL(`img/client/${f}`, PUBLIC))).toBe(true);
+    }
+  });
+});
+
 describe('繁中沒有簡體字', () => {
   it('台詞的繁中（OpenCC 轉換）', () => {
     const found = champions.flatMap((c) => c.quotes.flatMap((q) => findSimplified(q.text.zh_TW)));
@@ -165,6 +244,16 @@ describe('繁中沒有簡體字', () => {
     for (const t of runes.trees) for (const r of t.slots.flat()) (add(r.name), add(r.long));
     for (const s of summoners) (add(s.name), add(s.description));
     const unexpected = [...new Set(texts.flatMap(findSimplified))].filter((ch) => !OFFICIAL_KNOWN.has(ch));
+    expect(unexpected).toEqual([]);
+  });
+
+  it('收藏頁的台服官方文字（造型故事、炫彩、表情、頭像、守衛、終結特效）只有已知的幾個字', () => {
+    const texts: string[] = [];
+    const add = (t: Tri<Rich> | undefined) => t && texts.push(richToPlain(t.zh_TW));
+    for (const c of champions) for (const s of c.skins) add(s.description);
+    for (const g of chromas) for (const ch of g.chromas) add(ch.name);
+    for (const list of Object.values(collectibles)) for (const it of list) (add(it.name), add(it.description));
+    const unexpected = [...new Set(texts.flatMap(findSimplified))].filter((ch) => !COLLECTION_KNOWN.has(ch));
     expect(unexpected).toEqual([]);
   });
 });
