@@ -42,10 +42,10 @@ describe('收藏的欄目', () => {
     const page = new PageCollection();
     page.route = { page: 'collection', tab: 'items' };
     page.labels = labels;
-    await mount(page, (p) => Boolean(p.querySelector('.collection-tabs')));
-    const tabs = [...page.querySelectorAll('.collection-tab')].map((a) => a.textContent);
-    expect(tabs).toEqual(['英雄', '造型', '表情', '符文', '召喚師技能', '道具', '頭像', '偵察守衛', '炫彩造型', '終結特效']);
-    expect(page.querySelector('.collection-tab.on')?.textContent).toBe('道具');
+    await mount(page, (p) => Boolean(p.querySelector('lol-client-tabs')));
+    const tabs = page.querySelector('lol-client-tabs')!.tabs;
+    expect(tabs.map((t) => t.label)).toEqual(['英雄', '造型', '表情', '符文', '召喚師技能', '道具', '頭像', '偵察守衛', '炫彩造型', '終結特效']);
+    expect(tabs.find((t) => t.on)?.label).toBe('道具');
     expect(page.querySelector('page-items')).not.toBeNull();
   });
 });

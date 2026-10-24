@@ -1,4 +1,5 @@
 // 共用模組的入口。語料庫直接 import；建置時另外打包成 shared/lol-shared.js 給學習 App 載入。
+import './components/client-nav.ts';
 import './components/item-card.ts';
 import './components/quote.ts';
 import './components/row-toggles.ts';

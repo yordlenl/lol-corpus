@@ -4,7 +4,7 @@
 
 - 網址：<https://yordlenl.github.io/lol-corpus/>（iPad 上從主畫面的「LoL 英語」打開，再切到語料庫）
 - 規格：[docs/spec.md](docs/spec.md)
-- 目前進度：第八階段（客戶端外殼＋收藏：首頁、「開始」、收藏的十個欄目）；第七階段查詞擴充暫緩
+- 目前進度：第九階段（學習 App 改成客戶端的「開始」畫面；上方導覽列和分頁是共用元件 `lol-client-nav`、`lol-client-tabs`）；第八階段等驗收；第七階段查詞擴充暫緩
 
 ## 常用指令
 

@@ -59,13 +59,10 @@ export class PageCollection extends LightElement {
 
   render() {
     return html`<div class="collection" data-tab=${this.route.tab}>
-      <nav class="collection-tabs" aria-label="收藏">
-        ${COLLECTION_TAB_IDS.map(
-          (tab) =>
-            html`<a class="collection-tab ${tab === this.route.tab ? 'on' : ''}" href=${collectionHref(tab)}>${this.labels?.tabs[tab].zh_TW ?? FALLBACK_TABS[tab]}</a>`,
-        )}
-      </nav>
-      <a class="collection-close" href=${href()} aria-label="回首頁">✕</a>
+      <lol-client-tabs
+        .tabs=${COLLECTION_TAB_IDS.map((tab) => ({ label: this.labels?.tabs[tab].zh_TW ?? FALLBACK_TABS[tab], href: collectionHref(tab), on: tab === this.route.tab }))}
+        close-href=${href()}
+      ></lol-client-tabs>
       <div class="collection-page">${this.page()}</div>
     </div>`;
   }

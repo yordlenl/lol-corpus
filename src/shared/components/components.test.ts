@@ -163,3 +163,34 @@ describe('<lol-quote>', () => {
     expect(el.shadowRoot!.textContent).toContain('虛構語言');
   });
 });
+
+describe('<lol-client-nav>、<lol-client-tabs>（語料庫和學習 App 共用的客戶端外框）', () => {
+  it('開始、書包、標誌的連結；目前所在的亮起', async () => {
+    await import('./client-nav.ts');
+    const nav = Object.assign(document.createElement('lol-client-nav'), { current: 'play' as const, playHref: '#/home' });
+    document.body.append(nav);
+    await nav.updateComplete;
+    const root = nav.shadowRoot!;
+    expect(root.querySelector('.play')?.getAttribute('href')).toBe('#/home');
+    expect(root.querySelector('.play')?.classList.contains('on')).toBe(true);
+    expect(root.querySelector('.icon')?.getAttribute('href')).toMatch(/#\/collection\/champions$/);
+    expect(root.querySelector('.icon.on')).toBeNull();
+  });
+
+  it('分頁照給的順序，選中的有底線；關閉鈕連到指定的地方', async () => {
+    await import('./client-nav.ts');
+    const tabs = Object.assign(document.createElement('lol-client-tabs'), {
+      tabs: [
+        { label: '主頁', href: '#/home', on: false },
+        { label: '練習', href: '#/practice', on: true },
+      ],
+      closeHref: '/lol-corpus/',
+    });
+    document.body.append(tabs);
+    await tabs.updateComplete;
+    const root = tabs.shadowRoot!;
+    expect([...root.querySelectorAll('a.tab')].map((a) => a.textContent)).toEqual(['主頁', '練習']);
+    expect(root.querySelector('a.tab.on')?.textContent).toBe('練習');
+    expect(root.querySelector('a.close')?.getAttribute('href')).toBe('/lol-corpus/');
+  });
+});

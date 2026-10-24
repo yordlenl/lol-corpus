@@ -4,7 +4,7 @@ import { corpusUrl, loadCollectionLabels, loadMeta } from '../shared/index.ts';
 import type { CollectionLabels, Meta } from '../shared/types.ts';
 import { LightElement } from './light.ts';
 import './pages/collection.ts';
-import { collectionHref, href, parseHash, type Route } from './router.ts';
+import { parseHash, type Route } from './router.ts';
 
 export class CorpusApp extends LightElement {
   static properties = { route: { state: true }, meta: { state: true }, labels: { state: true } };
@@ -53,18 +53,7 @@ export class CorpusApp extends LightElement {
   render() {
     const inCollection = this.route.page === 'collection';
     return html`
-      <header class="client-nav">
-        <a class="client-logo" href=${href()} aria-label="首頁">
-          <img src=${corpusUrl('img/client/league-logo.svg')} alt="" width="44" height="44" />
-        </a>
-        <a class="play-button" href="/lol-study/">開始</a>
-        <nav class="nav-icons">
-          <a class="nav-icon ${inCollection ? 'on' : ''}" href=${collectionHref('champions')} aria-label="收藏" title="收藏">
-            <img src=${corpusUrl('img/client/nav-collections.svg')} alt="" width="34" height="34" />
-          </a>
-        </nav>
-        <lol-row-toggles class="toggles"></lol-row-toggles>
-      </header>
+      <lol-client-nav current=${inCollection ? 'collection' : 'home'}></lol-client-nav>
       <main class="client-main">
         ${this.route.page === 'collection'
           ? html`<page-collection .route=${this.route} .labels=${this.labels}></page-collection>`

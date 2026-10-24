@@ -31,7 +31,7 @@ import type { CDItemBin, CDPerk, CDPerkStyles, DDChampion, DDItem, DDRuneTree, D
 import { buildDictionary } from './dictionary.ts';
 import { download, getJson, getText, mapLimit } from './http.ts';
 import { buildItems, fillMissingDescriptions } from './items.ts';
-import { CLIENT_UI, clientUiUrl } from './client-ui.ts';
+import { CLIENT_UI, clientUiUrl, MODE_ICON_FILES } from './client-ui.ts';
 import {
   buildEmotes,
   buildFinishers,
@@ -232,6 +232,7 @@ async function main() {
   icons.set('img/client/nav-collections.svg', `${CDRAGON_PLUGINS}/rcp-fe-lol-static-assets/global/default/images/nav-icon-collections.svg`);
   icons.set('img/client/collection-bg.png', `${CDRAGON_PLUGINS}/rcp-fe-lol-collections/global/default/images/background.png`);
   for (const [name, fePath] of CLIENT_UI) icons.set(`img/client/ui/${name}`, clientUiUrl(fePath));
+  for (const [name, url] of MODE_ICON_FILES) icons.set(`img/client/ui/${name}`, url);
   const downloaded = await syncIcons(icons);
 
   // 商店篩選圖示是從遊戲圖集切出來的，不在上面的下載清單裡（同步時會被當成舊檔刪掉），所以在這之後才寫
