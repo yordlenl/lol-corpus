@@ -70,6 +70,7 @@ export class PageChampions extends LightElement {
     const sortLabel = (this.labels?.alphabetical.zh_TW ?? '依照字首排列 ▲').replace('▲', this.ascending ? '▲' : '▼');
     return html`<div class="collection-split">
       <aside class="control-panel">
+        <div class="panel-frame"><span class="panel-big">${this.champions.length}</span>位英雄</div>
         <input
           class="client-search"
           type="search"

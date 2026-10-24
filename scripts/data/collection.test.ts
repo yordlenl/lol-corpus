@@ -37,6 +37,8 @@ describe('收藏頁資料', () => {
     expect(list.map((s) => s.num)).toEqual([0, 1]);
     expect(list[0].name).toEqual(ahri.name);
     expect(list[1].name.zh_TW).toBe('宮廷 阿璃');
+    // 造型等級：原版是 base，沒寫的當一般
+    expect(list.map((s) => s.rarity)).toEqual(['base', 'normal']);
     // 簡中沒有故事時用英文
     expect(list[1].description).toEqual({ en: 'A story.', zh_TW: '一段故事。', zh_CN: 'A story.' });
     expect(out.cards.map((c) => c.story)).toEqual([false, true]);

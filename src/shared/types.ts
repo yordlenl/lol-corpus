@@ -72,6 +72,8 @@ export interface Skin {
   /** 0 是原版造型 */
   num: number;
   name: Tri;
+  /** 造型等級（客戶端邊框圖的名稱）：base 原版、normal、epic、legendary、mythic… */
+  rarity: string;
   /** 造型的故事介紹（有的才有） */
   description?: Tri<Rich>;
   /** 方形縮圖網址（連網載入） */
@@ -86,6 +88,7 @@ export interface SkinCard {
   champion: string;
   num: number;
   name: Tri;
+  rarity: string;
   /** 有沒有故事介紹 */
   story: boolean;
 }

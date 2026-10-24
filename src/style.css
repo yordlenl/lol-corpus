@@ -148,20 +148,20 @@ button {
 
 .nav-icon.on {
   opacity: 1;
-  background: linear-gradient(180deg, transparent, rgba(200, 170, 110, 0.12));
+  /* 客戶端導覽列選中時的光暈（uikit nav-highlight.png，貼在底部，高 32px） */
+  background: url('/lol-corpus/img/client/ui/nav-highlight.png') bottom center / 100% 32px no-repeat;
 }
 
-/* 選中的圖示上方有一個小小的金色箭頭，和客戶端一樣 */
+/* 選中的圖示上方的小箭頭（uikit nav-pointer.png） */
 .nav-icon.on::before {
   content: '';
   position: absolute;
   top: 0;
   left: 50%;
-  width: 22px;
-  height: 10px;
+  width: 28px;
+  height: 14px;
   transform: translateX(-50%);
-  background: var(--gold);
-  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  background: url('/lol-corpus/img/client/ui/nav-pointer.png') center / contain no-repeat;
 }
 
 .toggles {
@@ -213,32 +213,71 @@ button {
   place-items: center;
   padding: 0 14px;
   color: #a09b8c;
-  font-size: 17px;
+  /* 客戶端導覽列：繁中字級 16px */
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-decoration: none;
   border-bottom: 2px solid transparent;
+  transition: color 0.3s;
+}
+
+.collection-tab:hover {
+  color: #f0e6d2;
 }
 
 .collection-tab.on {
-  color: var(--gold-light);
-  border-bottom-color: var(--gold-light);
+  color: #f0e6d2;
+  border-bottom-color: #f0e6d2;
+  background: url('/lol-corpus/img/client/ui/nav-highlight.png') bottom center / 100% 32px no-repeat;
 }
 
+/* 關閉鈕：照客戶端 uikit close-button（28px 金色漸層圓環、24px 深色圓心、10px 的 ✕），放大 1.25 倍方便手指點 */
 .collection-close {
   position: absolute;
-  top: 8px;
+  top: 10px;
   right: 14px;
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  color: var(--gold-light);
-  font-size: 18px;
+  width: 35px;
+  height: 35px;
+  font-size: 0;
   text-decoration: none;
-  background: #010a13;
-  border: 2px solid var(--gold);
   border-radius: 50%;
+  background: linear-gradient(to top, #463714 4%, #785a28 23%, #c89b3c 90%, #c8aa6e 100%);
+}
+
+.collection-close::before {
+  content: '';
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #1e282d;
+  transition: background 0.15s ease-out;
+}
+
+.collection-close::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 12px;
+  height: 12px;
+  background-color: #cdbe91;
+  -webkit-mask: url('/lol-corpus/img/client/ui/x-icon.png') center / 12px no-repeat;
+  mask: url('/lol-corpus/img/client/ui/x-icon.png') center / 12px no-repeat;
+}
+
+.collection-close:hover {
+  background: linear-gradient(to top, #c89b3c 0%, #f0e6d2 100%);
+}
+
+.collection-close:hover::before {
+  background: linear-gradient(to top, #3c3c41 0%, #1e2328 100%);
+}
+
+.collection-close:hover::after {
+  background-color: #f0e6d2;
 }
 
 .collection-page {
@@ -286,32 +325,80 @@ button {
   font: inherit;
   font-size: 15px;
   color: var(--gold-light);
-  background: #010a13
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='6.5' cy='6.5' r='5' fill='none' stroke='%23a09b8c' stroke-width='1.6'/%3E%3Cpath d='M10.2 10.2 15 15' stroke='%23a09b8c' stroke-width='1.8'/%3E%3C/svg%3E")
-    12px center / 16px no-repeat;
+  /* 放大鏡用客戶端的圖（magnifying-glass-icon.png） */
+  background: #010a13 url('/lol-corpus/img/client/ui/magnifying-glass.png') 11px center / 18px no-repeat;
   border: 1px solid #785a28;
   border-radius: 0;
 }
 
+.client-search::placeholder {
+  color: #5b5a56;
+}
+
+/* 下拉選單：照客戶端 framed-dropdown（#cdbe91 字、上下漸層的金框、右邊上下箭頭圖） */
 .client-select {
   min-height: 42px;
-  padding: 0 12px;
+  padding: 0 36px 0 14px;
   font: inherit;
-  font-size: 15px;
+  font-size: 16px;
+  letter-spacing: 0.025em;
   text-align: left;
-  color: var(--gold-light);
-  background: #1e2328;
+  color: #cdbe91;
+  background: #1e2328 url('/lol-corpus/img/client/ui/up-down-arrow.png') right 12px center / 10px auto no-repeat;
   border: 1px solid #785a28;
+  border-image: linear-gradient(to top, #695625, #463714) 1;
   border-radius: 0;
   appearance: none;
   cursor: pointer;
 }
 
+.client-select:hover {
+  color: #f0e6d2;
+}
+
+/* 勾選框：客戶端的勾選框圖（checkbox-spritesheet.png，四格：一般、滑過、勾選、勾選滑過） */
 .client-check {
   display: flex;
   gap: 8px;
   align-items: center;
+  color: #a09b8c;
   font-size: 15px;
+}
+
+.client-check input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  appearance: none;
+  background: url('/lol-corpus/img/client/ui/checkbox.png') 0 0 / 18px 72px no-repeat;
+  cursor: pointer;
+}
+
+.client-check input:checked {
+  background-position: 0 -36px;
+}
+
+/* 收藏「英雄」「造型」左上角的方框（square-hextech-frame 上、中、下三段） */
+.panel-frame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 22px 10px;
+  color: #a09b8c;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  background:
+    url('/lol-corpus/img/client/ui/panel-frame-top.png') top center / 100% auto no-repeat,
+    url('/lol-corpus/img/client/ui/panel-frame-bot.png') bottom center / 100% auto no-repeat,
+    url('/lol-corpus/img/client/ui/panel-frame-mid.png') center / 100% 100% repeat-y;
+}
+
+.panel-big {
+  color: #c8aa6e;
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
 }
 
 .control-count {
@@ -367,12 +454,44 @@ button {
   text-decoration: none;
 }
 
+/* 英雄卡片：照客戶端（134×200、1px #1e2328 的框，滑過時變成金白漸層框） */
 .card-art {
+  position: relative;
   display: block;
-  aspect-ratio: 5 / 6.4;
+  aspect-ratio: 134 / 200;
   overflow: hidden;
   background: #1e2328;
-  border: 1px solid #3c3c41;
+  border: 1px solid #1e2328;
+}
+
+.champion-card:hover .card-art {
+  border-image: linear-gradient(-45deg, #c89b3c, #fafafa) 1;
+}
+
+/* 造型卡片：直式圖加上客戶端依造型等級的官方邊框 */
+.skin-art {
+  aspect-ratio: 264 / 453;
+  border: 0;
+  background: transparent;
+}
+
+.skin-art img:first-child {
+  position: absolute;
+  inset: 3% 4% 7%;
+  width: 92%;
+  height: 90%;
+}
+
+.skin-border {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.champion-card:hover .skin-art {
+  border-image: none;
 }
 
 .card-art img {
@@ -388,6 +507,7 @@ button {
 }
 
 .card-name {
+  color: #f0e6d2;
   font-size: 15px;
   line-height: 1.3;
 }
@@ -567,10 +687,13 @@ button {
 }
 
 .skin-title {
-  color: var(--gold-light);
-  font-size: 26px;
+  /* 客戶端造型名稱：#f0e6d2、24px、粗體、字距 0.05em */
+  color: #f0e6d2;
+  font-size: 24px;
   font-style: italic;
   font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 28px;
   text-shadow: 0 2px 6px #000;
 }
 
@@ -622,27 +745,38 @@ button {
   cursor: pointer;
 }
 
+/* 造型縮圖：照客戶端 skin-carousel（一般 87×49 灰底、選中 115×65 金色漸層框），放大 1.4 倍 */
 .skin-thumb {
   display: block;
-  width: 132px;
-  height: 76px;
-  overflow: hidden;
-  border: 2px solid #3c3c41;
+  flex: none;
+  width: 122px;
+  height: 69px;
+  margin: 11px 2px;
+  padding: 1px;
+  background: #3c3c41;
 }
 
 .skin-thumb img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: brightness(0.7);
+}
+
+.skin-thumb:hover {
+  background: linear-gradient(0deg, #c89b3c, #f0e6d2);
+}
+
+.skin-thumb:hover img {
+  filter: grayscale(25%) brightness(125%);
 }
 
 .skin-thumb.on {
-  border-color: var(--gold);
-}
-
-.skin-thumb.on img {
-  filter: none;
+  width: 161px;
+  height: 91px;
+  margin: 0 2px;
+  padding: 4px;
+  background: linear-gradient(0deg, #c8aa6e 0, #c89b3c 44%, #a07b32 59%, #785a28);
 }
 
 /* ---------- 收藏 → 表情、頭像、偵察守衛、終結特效 ---------- */
@@ -1582,19 +1716,36 @@ button {
   align-items: center;
 }
 
+/* 系別圓環：客戶端每一系的官方光環（vfx）和圖示（icon），兩張疊在一起 */
 .rune-tree-ring {
+  position: relative;
   display: grid;
   place-items: center;
   flex: none;
   width: 84px;
   height: 84px;
   border-radius: 50%;
-  box-shadow: inset 0 0 0 2px var(--tree), 0 0 14px color-mix(in srgb, var(--tree) 40%, transparent);
-  background: radial-gradient(circle, color-mix(in srgb, var(--tree) 18%, #05080d), #05080d 70%) !important;
 }
 
-.rune-tree-ring.open {
-  box-shadow: inset 0 0 0 3px var(--tree), 0 0 22px var(--tree);
+.rune-tree-art {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 148px;
+  height: 172px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.rune-tree-art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.rune-tree-ring.open .rune-tree-art {
+  filter: brightness(1.4) drop-shadow(0 0 6px var(--tree));
 }
 
 .rune-tree-text {
@@ -1622,6 +1773,8 @@ button {
 }
 
 .keystone-heading {
+  position: relative;
+  padding-bottom: 12px;
   margin: 6px 0 2px 22px;
   color: var(--tree);
   font-size: 14px;
@@ -1637,9 +1790,23 @@ button {
 }
 
 .rune-line.keystone {
+  position: relative;
   margin-left: -56px;
-  padding: 6px 0 14px;
-  border-bottom: 1px solid color-mix(in srgb, var(--tree) 35%, transparent);
+  padding: 6px 0 18px;
+}
+
+/* 關鍵符文上下的金線：客戶端 primary-perk-selector 的 keystone-border.svg 遮罩，中間是系別顏色 */
+.rune-line.keystone::after,
+.keystone-heading::after {
+  content: '';
+  position: absolute;
+  left: 40px;
+  bottom: 0;
+  width: 286px;
+  height: 9px;
+  background: linear-gradient(to right, transparent 0, var(--tree) 50%, transparent 100%);
+  -webkit-mask: url('/lol-corpus/img/client/ui/keystone-border.svg') center / 100% 100% no-repeat;
+  mask: url('/lol-corpus/img/client/ui/keystone-border.svg') center / 100% 100% no-repeat;
 }
 
 .rune-line-icon {
@@ -1775,4 +1942,12 @@ button {
 .rune-view-toggle button.on {
   color: var(--gold-light);
   border-color: var(--gold);
+}
+
+.rune-line.keystone::after {
+  left: 56px;
+}
+
+.keystone-heading::after {
+  left: -18px;
 }

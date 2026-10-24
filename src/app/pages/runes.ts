@@ -108,7 +108,10 @@ export class PageRunes extends LightElement {
         aria-label=${`換系別（目前：${tree.name.zh_TW}）`}
         @click=${() => this.toggle(chooser)}
       >
-        <img src=${corpusUrl(tree.icon)} alt="" width="56" height="56" />
+        <span class="rune-tree-art" aria-hidden="true">
+          <img src=${corpusUrl(`img/client/ui/rune-${tree.key.toLowerCase()}-vfx.png`)} alt="" />
+          <img src=${corpusUrl(`img/client/ui/rune-${tree.key.toLowerCase()}-icon.png`)} alt="" />
+        </span>
       </button>
       <button
         type="button"

@@ -13,6 +13,7 @@ import type {
   SkinCard,
   Tri,
 } from '../../src/shared/types.ts';
+import { SKIN_RARITY } from './client-ui.ts';
 import { CDRAGON } from './config.ts';
 import { toPlain, toRich } from './markup.ts';
 
@@ -30,6 +31,8 @@ export interface CDSkin {
   name: string;
   description?: string | null;
   tilePath?: string;
+  /** 造型等級：kNoRarity、kEpic、kLegendary… */
+  rarity?: string;
   chromas?: Array<{ id: number; name: string; chromaPath: string; colors?: string[] }>;
 }
 export interface CDEmote {
@@ -116,6 +119,7 @@ export function buildSkins(
       onUnknownTag,
     );
     const tile = skin.tilePath ? cdragonAsset(skin.tilePath) : undefined;
+    const rarity = skin.isBase ? 'base' : (SKIN_RARITY[skin.rarity ?? ''] ?? 'normal');
     const skinChromas: Chroma[] = (skin.chromas ?? []).map((c) => {
       const localName = (l: Lang) => (l === 'en' ? c.name : local[l]?.chromas?.find((x) => x.id === c.id)?.name);
       return { id: c.id, name: triOf((l) => toPlain(localName(l)) || undefined, c.name), image: cdragonAsset(c.chromaPath), colors: c.colors ?? [] };
@@ -125,12 +129,13 @@ export function buildSkins(
       id: String(skin.id),
       num,
       name,
+      rarity,
       ...(description ? { description } : {}),
       ...(tile ? { tile } : {}),
       ...(skinChromas.length ? { chromas: skinChromas.length } : {}),
     };
     perChampion.set(champion.id, [...(perChampion.get(champion.id) ?? []), entry]);
-    cards.push({ id: skin.id, champion: champion.id, num, name, story: Boolean(description) });
+    cards.push({ id: skin.id, champion: champion.id, num, name, rarity, story: Boolean(description) });
     if (skinChromas.length) chromas.push({ skinId: skin.id, champion: champion.id, skinName: name, chromas: skinChromas });
   }
   return { perChampion, cards, chromas };

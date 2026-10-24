@@ -1,8 +1,8 @@
 // 收藏 → 造型：全部造型的直式卡片，可以搜尋。點一款就到那位英雄的「造型」，停在那一款。
 import { html, nothing } from 'lit';
-import { loadChampionIndex, loadSkinCards } from '../../shared/index.ts';
+import { corpusUrl, loadChampionIndex, loadSkinCards } from '../../shared/index.ts';
 import type { ChampionSummary, SkinCard } from '../../shared/types.ts';
-import { championLoading } from '../images.ts';
+import { championLoading, skinBorder } from '../images.ts';
 import { LightElement } from '../light.ts';
 import { collectionHref } from '../router.ts';
 import { GrowingList } from './growing-list.ts';
@@ -55,6 +55,7 @@ export class PageSkins extends LightElement {
     const shown = this.skins.filter((s) => matchesSkin(s, this.champions!.get(s.champion), this.query, this.storyOnly));
     return html`<div class="collection-split">
       <aside class="control-panel">
+        <div class="panel-frame"><span class="panel-big">${shown.length}</span>款造型</div>
         <input
           class="client-search"
           type="search"
@@ -77,14 +78,16 @@ export class PageSkins extends LightElement {
           />
           只看有故事介紹的
         </label>
-        <p class="control-count">${shown.length} 款</p>
       </aside>
       <div class="collection-scroll">
         ${shown.length ? nothing : html`<p class="notice">找不到符合的造型。</p>`}
         <div class="champion-cards skin-cards">
           ${shown.slice(0, this.list.limit).map(
-            (s) => html`<a class="champion-card" href=${collectionHref('champions', s.champion, 'skins', s.num)}>
-              <span class="card-art"><img src=${championLoading(s.champion, s.num)} alt="" loading="lazy" /></span>
+            (s) => html`<a class="champion-card skin-card" href=${collectionHref('champions', s.champion, 'skins', s.num)}>
+              <span class="card-art skin-art">
+                <img src=${championLoading(s.champion, s.num)} alt="" loading="lazy" />
+                <img class="skin-border" src=${corpusUrl(skinBorder(s.rarity))} alt="" />
+              </span>
               <span class="card-name">${s.name.zh_TW}<span class="card-en" lang="en">${s.name.en}</span></span>
             </a>`,
           )}

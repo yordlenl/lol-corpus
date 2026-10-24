@@ -24,6 +24,7 @@ const { PageChampions, sortChampions } = await import('./champions.ts');
 const { PageChampion, thumbWindow } = await import('./champion.ts');
 const { PageCollectibles } = await import('./collectibles.ts');
 const { PageSummoners, sortSpells, spellModes } = await import('./summoners.ts');
+const { skinBorder } = await import('../images.ts');
 const labels = JSON.parse(readFileSync('public/data/collection/labels.json', 'utf8'));
 const champions = JSON.parse(readFileSync('public/data/champions.json', 'utf8'));
 
@@ -111,6 +112,15 @@ describe('英雄頁', () => {
     expect(thumbWindow(20, 10)).toEqual([8, 9, 10, 11, 12]);
     expect(thumbWindow(20, 19)).toEqual([15, 16, 17, 18, 19]);
     expect(thumbWindow(3, 1)).toEqual([0, 1, 2]);
+  });
+});
+
+describe('造型卡片的邊框', () => {
+  it('依造型等級用客戶端的邊框；原版和 rare 用一般的框', () => {
+    expect(skinBorder('epic')).toBe('img/client/ui/skin-border-epic.png');
+    expect(skinBorder('ultimate')).toBe('img/client/ui/skin-border-ultimate.png');
+    expect(skinBorder('base')).toBe('img/client/ui/skin-border-normal.png');
+    expect(skinBorder('rare')).toBe('img/client/ui/skin-border-normal.png');
   });
 });
 

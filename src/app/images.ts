@@ -6,3 +6,7 @@ export const championLoading = (championId: string, num = 0) => `${DDRAGON_IMG}/
 
 /** 造型大圖 */
 export const championSplash = (championId: string, num = 0) => `${DDRAGON_IMG}/splash/${championId}_${num}.jpg`;
+
+/** 收藏「造型」卡片的官方邊框，依造型等級（原版和 rare 用一般的框，和客戶端一樣） */
+const BORDERS = new Set(['normal', 'epic', 'legendary', 'mythic', 'ultimate', 'transcendent', 'exalted']);
+export const skinBorder = (rarity: string) => `img/client/ui/skin-border-${BORDERS.has(rarity) ? rarity : 'normal'}.png`;

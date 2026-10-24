@@ -36,16 +36,6 @@ export function buildChampion(
     icon: `img/spell/${sp.image.full}`,
   }));
 
-  const skinName = (lang: keyof Tri, id: string) => c[lang].skins.find((s) => s.id === id)?.name;
-  // 原版造型（num 0）在資料裡只叫 default，不是遊戲文字，不列入
-  const skins = c.en.skins
-    .filter((s) => s.parentSkin == null && s.num !== 0)
-    .map((s) => ({
-      id: s.id,
-      num: s.num,
-      name: { en: s.name, zh_TW: skinName('zh_TW', s.id) ?? s.name, zh_CN: skinName('zh_CN', s.id) ?? s.name },
-    }));
-
   return {
     ...summarize(c),
     passive: {
@@ -58,7 +48,8 @@ export function buildChampion(
       icon: `img/passive/${c.en.passive.image.full}`,
     },
     spells,
-    skins,
+    // 造型在 collection.ts 的 buildSkins 補上（名稱、故事、等級都用 CommunityDragon 的官方資料）
+    skins: [],
     quotes,
   };
 }

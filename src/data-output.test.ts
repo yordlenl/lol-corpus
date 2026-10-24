@@ -2,6 +2,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { findSimplified } from '../scripts/data/chinese.ts';
+import { CLIENT_UI } from '../scripts/data/client-ui.ts';
 import { DDRAGON_VERSION } from '../scripts/data/config.ts';
 import type {
   Champion,
@@ -209,6 +210,19 @@ describe('收藏頁的資料（CommunityDragon 官方三語）', () => {
       expect(s.summonerLevel).toBeGreaterThan(0);
       expect(s.modes).toContain('CLASSIC');
     }
+  });
+
+  it('客戶端自己的介面圖片（按鈕框、面板外框、造型邊框、符文光環）都下載了', () => {
+    expect(CLIENT_UI.filter(([name]) => !existsSync(new URL(`img/client/ui/${name}`, PUBLIC)))).toEqual([]);
+  });
+
+  it('每款造型都有官方的造型等級；原版是 base', () => {
+    const allowed = new Set(['base', 'normal', 'rare', 'epic', 'legendary', 'mythic', 'ultimate', 'transcendent', 'exalted']);
+    for (const c of champions) {
+      expect(c.skins[0].rarity).toBe('base');
+      for (const s of c.skins) expect(allowed.has(s.rarity)).toBe(true);
+    }
+    expect(champions.find((c) => c.id === 'Ahri')!.skins.find((s) => s.name.en === 'K/DA ALL OUT Ahri')!.rarity).toBe('epic');
   });
 
   it('客戶端介面圖都下載了', () => {
