@@ -1,5 +1,5 @@
 // 遊戲客戶端的上方導覽列和下面那排分頁，語料庫和學習 App 共用。
-// <lol-client-nav current="home|play|collection">：左上角標誌（回首頁）、「開始」（進學習）、書包（進收藏）、三行開關。
+// <lol-client-nav current="home|play|collection">：左上角標誌（回首頁）、「開始」（進學習）、三行開關、最右邊是書包（進收藏）。
 // <lol-client-tabs .tabs=${[...]} close-href="…">：一排分頁（收藏的十個欄目、學習的主頁／練習…）和右上角關閉鈕。
 // 樣式照客戶端自己的樣式檔（uikit 導覽列、關閉鈕），圖片是 npm run data 下載的客戶端介面圖。
 import { css, html, LitElement } from 'lit';
@@ -56,9 +56,12 @@ export class LolClientNav extends LitElement {
       background: linear-gradient(180deg, #0b4f58, #0a2a33);
       box-shadow: inset 0 0 18px rgba(10, 200, 185, 0.7);
     }
+    /* 三行開關靠右，書包放在最右邊 */
+    lol-row-toggles {
+      margin-left: auto;
+    }
     .icons {
       display: flex;
-      margin-left: auto;
     }
     .icon {
       position: relative;
@@ -97,12 +100,12 @@ export class LolClientNav extends LitElement {
     return html`<nav style=${vars}>
       <a class="logo" href=${corpusUrl('')} aria-label="首頁"><img src=${ui('league-logo.svg')} alt="" width="44" height="44" /></a>
       <a class="play ${this.current === 'play' ? 'on' : ''}" href=${play}>開始</a>
+      <lol-row-toggles></lol-row-toggles>
       <div class="icons">
         <a class="icon ${this.current === 'collection' ? 'on' : ''}" href=${corpusUrl('#/collection/champions')} aria-label="收藏" title="收藏">
           <img src=${ui('nav-collections.svg')} alt="" width="34" height="34" />
         </a>
       </div>
-      <lol-row-toggles></lol-row-toggles>
     </nav>`;
   }
 }

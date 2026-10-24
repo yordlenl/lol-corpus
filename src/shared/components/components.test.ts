@@ -175,6 +175,9 @@ describe('<lol-client-nav>、<lol-client-tabs>（語料庫和學習 App 共用�
     expect(root.querySelector('.play')?.classList.contains('on')).toBe(true);
     expect(root.querySelector('.icon')?.getAttribute('href')).toMatch(/#\/collection\/champions$/);
     expect(root.querySelector('.icon.on')).toBeNull();
+    // 書包在最右邊（三行開關後面）
+    const order = [...root.querySelector('nav')!.children].map((el) => el.tagName.toLowerCase() === 'lol-row-toggles' ? 'toggles' : el.className.split(' ')[0]);
+    expect(order).toEqual(['logo', 'play', 'toggles', 'icons']);
   });
 
   it('分頁照給的順序，選中的有底線；關閉鈕連到指定的地方', async () => {

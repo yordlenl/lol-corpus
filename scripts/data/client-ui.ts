@@ -44,6 +44,8 @@ export const CLIENT_UI: Array<[string, string]> = [
   ['magnifying-glass.png', '/fe/lol-static-assets/images/uikit/magnifying-glass-icon.png'],
   ['up-down-arrow.png', '/fe/lol-uikit/images/up-down-arrow.png'],
   ['checkbox.png', '/fe/lol-uikit/images/checkbox-spritesheet.png'],
+  // 「開始」畫面的菱形選項（一張圖六種狀態，每格 20px）
+  ['radio.png', '/fe/lol-parties/btn_icon.png'],
   // 收藏「英雄」左上角的方框（上、中、下三段）
   ['panel-frame-top.png', '/fe/lol-collections/images/control-panel/square-hextech-frame-top.png'],
   ['panel-frame-mid.png', '/fe/lol-collections/images/control-panel/square-hextech-frame-mid.png'],
@@ -75,6 +77,12 @@ const MODE_ICONS: Array<[string, string, Record<'default' | 'hover' | 'active', 
   ['items', 'aram', { default: 'game-select-icon-default', hover: 'game-select-icon-hover', active: 'game-select-icon-active' }],
   ['runes', 'gamemodex', { default: 'game-select-icon-default', hover: 'game-select-icon-hover', active: 'game-select-icon-active' }],
   ['summoners', 'tft', { default: 'game-select-icon-default', hover: 'game-select-icon-hover', active: 'game-select-icon-active' }],
+];
+
+/** 「開始」畫面的官方背景圖：召喚峽谷（山景）、隨機單中；其他類別沒有對應的背景，用召喚峽谷的 */
+export const MODE_BACKGROUNDS: Array<[string, string]> = [
+  ['mode-bg-classic.jpg', `${CDRAGON}/default/content/src/leagueclient/gamemodeassets/classic_sru/img/parties-background.jpg`],
+  ['mode-bg-aram.jpg', `${CDRAGON}/default/content/src/leagueclient/gamemodeassets/aram/img/parties-background.jpg`],
 ];
 
 /** 練習分頁圖示：存檔名 → 網址（例如 mode-champions-active.png） */
