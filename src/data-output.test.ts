@@ -226,7 +226,8 @@ describe('收藏頁的資料（CommunityDragon 官方三語）', () => {
   });
 
   it('客戶端介面圖都下載了', () => {
-    for (const f of ['home.jpg', 'league-logo.svg', 'nav-collections.svg', 'collection-bg.png']) {
+    expect(existsSync(new URL('home/home.jpg', PUBLIC))).toBe(true);
+    for (const f of ['league-logo.svg', 'nav-collections.svg', 'collection-bg.png']) {
       expect(existsSync(new URL(`img/client/${f}`, PUBLIC))).toBe(true);
     }
   });

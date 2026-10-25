@@ -40,7 +40,7 @@ export class CorpusApp extends LightElement {
   }
 
   private home() {
-    return html`<section class="client-home" style="--home-bg:url(${corpusUrl('img/client/home.jpg')})">
+    return html`<section class="client-home" style="--home-bg:url(${corpusUrl('home/home.jpg')})">
       <footer class="home-footer">
         ${this.meta ? html`<p>遊戲資料版本 ${this.meta.ddragon}・英雄 ${this.meta.counts.champions} 位・裝備 ${this.meta.counts.items} 件</p>` : nothing}
         <p>本站是非官方的學習用網站，未經 Riot Games 認可，也不代表 Riot Games 的立場。英雄聯盟的名稱、文字、圖示、圖片與語音的權利屬於 Riot Games, Inc.</p>

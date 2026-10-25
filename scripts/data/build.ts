@@ -226,8 +226,7 @@ async function main() {
       icons.set(shard.icon, cdragonAssetUrl(CDRAGON, perk.iconPath));
     }
   }
-  // 客戶端介面圖：首頁大圖（K/DA ALL OUT 阿璃的造型大圖）、左上角標誌、書包（收藏）圖示、收藏頁背景
-  icons.set('img/client/home.jpg', `${DDRAGON}/cdn/img/champion/splash/Ahri_28.jpg`);
+  // 客戶端介面圖：左上角標誌、書包（收藏）圖示、收藏頁背景（首頁照片是使用者指定的，放在 public/home/，不在這裡下載）
   icons.set('img/client/league-logo.svg', `${CDRAGON_PLUGINS}/rcp-fe-lol-navigation/global/default/activity-center/league-logo-rest.svg`);
   icons.set('img/client/nav-collections.svg', `${CDRAGON_PLUGINS}/rcp-fe-lol-static-assets/global/default/images/nav-icon-collections.svg`);
   icons.set('img/client/collection-bg.png', `${CDRAGON_PLUGINS}/rcp-fe-lol-collections/global/default/images/background.png`);
