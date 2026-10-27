@@ -44,6 +44,8 @@ export const CLIENT_UI: Array<[string, string]> = [
   ['magnifying-glass.png', '/fe/lol-static-assets/images/uikit/magnifying-glass-icon.png'],
   ['up-down-arrow.png', '/fe/lol-uikit/images/up-down-arrow.png'],
   ['checkbox.png', '/fe/lol-uikit/images/checkbox-spritesheet.png'],
+  // 單字朗讀的喇叭（客戶端設定頁的音效開關圖）
+  ['speaker.png', '/fe/lol-settings/audioon.png'],
   // 「開始」畫面的菱形選項（一張圖六種狀態，每格 20px）
   ['radio.png', '/fe/lol-parties/btn_icon.png'],
   // 收藏「英雄」左上角的方框（上、中、下三段）

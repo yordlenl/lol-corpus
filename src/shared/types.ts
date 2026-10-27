@@ -401,9 +401,16 @@ export interface ReviewOutcome {
   source?: LogSource;
 }
 
+/** 單字朗讀：口音（美式／英式）和速度 */
+export interface SpeechSettings {
+  accent: 'en-US' | 'en-GB';
+  rate: 'normal' | 'slow';
+}
+
 export interface Settings {
   rows: Record<Lang, boolean>;
   dailyNew: number;
+  speech: SpeechSettings;
 }
 
 export interface ExportFile {

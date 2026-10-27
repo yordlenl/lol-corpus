@@ -3,6 +3,7 @@ import './components/client-nav.ts';
 import './components/item-card.ts';
 import './components/quote.ts';
 import './components/row-toggles.ts';
+import './components/speak-button.ts';
 import './components/spell.ts';
 import './components/trilingual.ts';
 import { installSentencePicker } from './components/sentence-picker.ts';

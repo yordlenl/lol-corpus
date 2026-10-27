@@ -22,7 +22,12 @@ export class SettingsStore extends EventTarget implements SettingsApi {
   }
 
   async update(patch: Partial<Settings>) {
-    this.value = { ...this.value, ...patch, rows: { ...this.value.rows, ...patch.rows } };
+    this.value = {
+      ...this.value,
+      ...patch,
+      rows: { ...this.value.rows, ...patch.rows },
+      speech: { ...this.value.speech, ...patch.speech },
+    };
     this.dispatchEvent(new Event('change'));
     await this.store?.saveSettings(this.value);
   }

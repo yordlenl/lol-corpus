@@ -15,4 +15,14 @@ describe('設定', () => {
     expect(settings.current.rows).toEqual({ en: true, zh_TW: true, zh_CN: false });
     expect((await db.getSettings()).rows.zh_CN).toBe(false);
   });
+
+  it('改朗讀設定：口音、速度存進資料庫，其他設定不變', async () => {
+    const db = new LearningStore(new IDBFactory());
+    const settings = new SettingsStore();
+    await settings.load(db);
+    await settings.update({ speech: { ...settings.current.speech, rate: 'slow' } });
+    await settings.update({ speech: { ...settings.current.speech, accent: 'en-GB' } });
+    expect((await db.getSettings()).speech).toEqual({ accent: 'en-GB', rate: 'slow' });
+    expect(settings.current.rows).toEqual({ en: true, zh_TW: true, zh_CN: true });
+  });
 });

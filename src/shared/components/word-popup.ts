@@ -7,6 +7,7 @@ import type { LookupResult, WordEventDetail } from '../types.ts';
 import { define } from './define.ts';
 import { placeNear } from './place.ts';
 import { popupStyles } from './popup-styles.ts';
+import './speak-button.ts';
 import { themeStyles } from './styles.ts';
 
 export class LolWordPopup extends LitElement {
@@ -37,6 +38,9 @@ export class LolWordPopup extends LitElement {
       }
       .phonetic {
         color: var(--lol-muted, #666);
+      }
+      lol-speak-button {
+        align-self: center;
       }
       .lemma {
         margin-top: 2px;
@@ -158,6 +162,7 @@ export class LolWordPopup extends LitElement {
       <div class="top">
         <span class="word" lang="en">${this.detail.word}</span>
         ${phonetic ? html`<span class="phonetic">/${phonetic}/</span>` : nothing}
+        ${this.result?.entry ? html`<lol-speak-button .word=${this.detail.word}></lol-speak-button>` : nothing}
       </div>
       ${this.body()}
       <button class="close" type="button" aria-label="關閉" @click=${this.close}>×</button>

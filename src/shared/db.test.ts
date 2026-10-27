@@ -9,7 +9,7 @@ import {
   newWordCard,
   stateToFsrs,
 } from './db.ts';
-import type { SourceRef } from './types.ts';
+import type { Settings, SourceRef } from './types.ts';
 
 const NOW = new Date('2026-10-22T10:00:00.000Z');
 const source: SourceRef = { type: 'spell', id: 'Ahri/Q' };
@@ -45,8 +45,15 @@ describe('學習紀錄資料庫', () => {
 
   it('存設定、讀設定', async () => {
     const store = new LearningStore(new IDBFactory());
-    await store.saveSettings({ rows: { en: true, zh_TW: false, zh_CN: true }, dailyNew: 30 });
-    expect(await store.getSettings()).toEqual({ rows: { en: true, zh_TW: false, zh_CN: true }, dailyNew: 30 });
+    const saved = { rows: { en: true, zh_TW: false, zh_CN: true }, dailyNew: 30, speech: { accent: 'en-GB', rate: 'slow' } } as const;
+    await store.saveSettings(saved);
+    expect(await store.getSettings()).toEqual(saved);
+  });
+
+  it('舊版存的設定沒有朗讀：補上預設的美式、正常速度', async () => {
+    const store = new LearningStore(new IDBFactory());
+    await store.saveSettings({ rows: { en: true, zh_TW: false, zh_CN: true }, dailyNew: 30 } as unknown as Settings);
+    expect(await store.getSettings()).toEqual({ rows: { en: true, zh_TW: false, zh_CN: true }, dailyNew: 30, speech: DEFAULT_SETTINGS.speech });
   });
 
   it('新增、查詢、依種類列出、刪除卡片', async () => {

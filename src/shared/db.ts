@@ -25,6 +25,7 @@ export const FORMAT_VERSION = 1;
 export const DEFAULT_SETTINGS: Settings = {
   rows: { en: true, zh_TW: true, zh_CN: true },
   dailyNew: 20,
+  speech: { accent: 'en-US', rate: 'normal' },
 };
 
 const CARDS = 'cards';
@@ -157,6 +158,7 @@ export class LearningStore implements LearningStoreApi {
       ...DEFAULT_SETTINGS,
       ...saved,
       rows: { ...DEFAULT_SETTINGS.rows, ...saved?.rows },
+      speech: { ...DEFAULT_SETTINGS.speech, ...saved?.speech },
     };
   }
 
