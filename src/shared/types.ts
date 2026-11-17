@@ -350,6 +350,15 @@ export interface WordCard extends CardBase {
   lemma: string;
   /** 收藏時所在的句子 */
   context?: { text: Tri; source: SourceRef };
+  /** 在哪幾本筆記本（筆記本 id）；沒寫或空的就是「預設」 */
+  notebooks?: string[];
+}
+
+/** 單字筆記本。id 為 default 的是「預設」，一定存在、不能刪 */
+export interface Notebook {
+  id: string;
+  name: string;
+  createdAt: string;
 }
 
 /**
@@ -420,6 +429,8 @@ export interface ExportFile {
   cards: StudyCard[];
   reviewLogs: ReviewLog[];
   settings: Settings;
+  /** 單字筆記本；舊的備份檔沒有，匯入時單字都算在「預設」 */
+  notebooks?: Notebook[];
 }
 
 // ---------- 練習 ----------
@@ -500,6 +511,8 @@ export interface LearningStoreApi {
   deleteCard(id: string): Promise<void>;
   addReviewLog(log: ReviewLog): Promise<number>;
   listReviewLogs(cardId?: string): Promise<ReviewLog[]>;
+  getNotebooks(): Promise<Notebook[]>;
+  saveNotebooks(notebooks: Notebook[]): Promise<void>;
   exportAll(): Promise<ExportFile>;
   importAll(file: ExportFile, mode: 'replace' | 'merge'): Promise<{ cards: number; reviewLogs: number }>;
 }
@@ -515,7 +528,22 @@ export interface SettingsApi extends EventTarget {
 /** 生詞本與句子庫的收藏狀態；收藏有變動時發出 change 事件 */
 export interface CollectionApi extends EventTarget {
   has(id: string): boolean;
-  addWord(input: { word: string; lemma: string; context?: WordCard['context'] }): Promise<WordCard>;
+  /**
+   * 收藏單字到某一本筆記本（沒寫就是「預設」）。
+   * 已經收過的不會變兩張、也不會蓋掉複習進度，只是多放進這一本。
+   */
+  addWord(input: { word: string; lemma: string; context?: WordCard['context']; notebook?: string }): Promise<WordCard>;
+  /** 所有筆記本，「預設」在最前面，其他照建立順序 */
+  notebooks(): Notebook[];
+  /** 這張單字卡在哪幾本筆記本；沒收藏回傳空陣列 */
+  notebooksOf(id: string): string[];
+  /** 新增筆記本；名稱空白、超過 20 個字、和別本同名時丟出錯誤（訊息可以直接顯示） */
+  createNotebook(name: string): Promise<Notebook>;
+  renameNotebook(id: string, name: string): Promise<void>;
+  /** 刪除筆記本：只在這一本的單字搬到「預設」，也在別本的只從這一本拿掉。「預設」不能刪 */
+  deleteNotebook(id: string): Promise<void>;
+  /** 改單字卡在哪幾本；至少要一本 */
+  setWordNotebooks(id: string, notebooks: string[]): Promise<void>;
   /** origin：從哪裡收的，沒寫就是語料庫 */
   addSentence(input: { unit: SentenceUnit; source: SourceRef; audio?: string; origin?: CardOrigin }): Promise<SentenceCard>;
   remove(id: string): Promise<void>;

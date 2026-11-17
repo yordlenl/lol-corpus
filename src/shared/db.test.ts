@@ -8,8 +8,9 @@ import {
   newSentenceCard,
   newWordCard,
   stateToFsrs,
+  wordNotebooks,
 } from './db.ts';
-import type { Settings, SourceRef } from './types.ts';
+import type { ExportFile, Notebook, Settings, SourceRef, WordCard } from './types.ts';
 
 const NOW = new Date('2026-10-22T10:00:00.000Z');
 const source: SourceRef = { type: 'spell', id: 'Ahri/Q' };
@@ -103,5 +104,49 @@ describe('學習紀錄資料庫', () => {
     const file = await store.exportAll();
     await expect(store.importAll({ ...file, app: 'other' as 'lol-english' }, 'merge')).rejects.toThrow('不是 LoL 英語的備份檔');
     await expect(store.importAll({ ...file, formatVersion: FORMAT_VERSION + 1 }, 'merge')).rejects.toThrow('請先更新網站');
+  });
+});
+
+describe('備份裡的單字筆記本', () => {
+  const nb = (id: string, name: string): Notebook => ({ id, name, createdAt: NOW.toISOString() });
+  const wordIn = (lemma: string, notebooks?: string[]) => ({ ...newWordCard({ word: lemma, lemma, origin: 'corpus' }, NOW), ...(notebooks ? { notebooks } : {}) });
+
+  it('匯出帶筆記本，取代匯入後一樣', async () => {
+    const a = new LearningStore(new IDBFactory());
+    await a.saveNotebooks([nb('default', '常用字'), nb('nb1', '英雄技能')]);
+    await a.putCard(wordIn('minion', ['nb1']));
+    const file = JSON.parse(JSON.stringify(await a.exportAll())) as ExportFile;
+    expect(file.notebooks!.map((n) => n.name)).toEqual(['常用字', '英雄技能']);
+
+    const b = new LearningStore(new IDBFactory());
+    await b.importAll(file, 'replace');
+    expect((await b.getNotebooks()).map((n) => n.name)).toEqual(['常用字', '英雄技能']);
+    expect(await b.getCard('word:minion')).toMatchObject({ notebooks: ['nb1'] });
+  });
+
+  it('匯入舊的備份檔（沒有筆記本）：只有「預設」，單字都算在「預設」', async () => {
+    const store = new LearningStore(new IDBFactory());
+    const { notebooks: _ignored, ...old } = await new LearningStore(new IDBFactory()).exportAll();
+    await store.importAll({ ...old, cards: [wordIn('orb')] }, 'replace');
+    expect((await store.getNotebooks()).map((n) => n.id)).toEqual(['default']);
+    expect(wordNotebooks((await store.getCard('word:orb')) as WordCard)).toEqual(['default']);
+  });
+
+  it('合併匯入：同名的合成一本、「預設」對「預設」、id 撞到換新的', async () => {
+    const store = new LearningStore(new IDBFactory());
+    await store.saveNotebooks([nb('default', '預設'), nb('nb1', '英雄技能'), nb('nb2', '裝備')]);
+    const file: ExportFile = {
+      ...(await new LearningStore(new IDBFactory()).exportAll()),
+      notebooks: [nb('default', '我的預設'), nb('x1', '英雄技能'), nb('nb2', '符文')],
+      cards: [wordIn('minion', ['default', 'x1']), wordIn('rune', ['nb2']), wordIn('gone', ['missing'])],
+    };
+    await store.importAll(file, 'merge');
+    const books = await store.getNotebooks();
+    expect(books.map((n) => n.name)).toEqual(['預設', '英雄技能', '裝備', '符文']);
+    const runes = books[3].id;
+    expect(runes).not.toBe('nb2');
+    expect(await store.getCard('word:minion')).toMatchObject({ notebooks: ['default', 'nb1'] });
+    expect(await store.getCard('word:rune')).toMatchObject({ notebooks: [runes] });
+    expect(await store.getCard('word:gone')).toMatchObject({ notebooks: ['default'] });
   });
 });

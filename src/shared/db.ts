@@ -1,4 +1,4 @@
-// 學習紀錄資料庫：生詞本、句子庫、複習紀錄、設定。
+// 學習紀錄資料庫：生詞本（含單字筆記本）、句子庫、複習紀錄、設定。
 // 格式只在這裡定義一次，語料庫和學習 App 都透過它讀寫。
 import { createEmptyCard, type Card } from 'ts-fsrs';
 import type {
@@ -7,6 +7,7 @@ import type {
   ExportFile,
   FsrsState,
   LearningStoreApi,
+  Notebook,
   ReviewLog,
   SentenceCard,
   Settings,
@@ -32,6 +33,28 @@ const CARDS = 'cards';
 const LOGS = 'reviewLogs';
 const SETTINGS = 'settings';
 const SETTINGS_KEY = 'app';
+/** 筆記本清單和設定放在同一個資料表，不用升級資料庫 */
+const NOTEBOOKS_KEY = 'notebooks';
+
+/** 「預設」筆記本：一定存在、不能刪（可以改名） */
+export const DEFAULT_NOTEBOOK_ID = 'default';
+export const NOTEBOOK_NAME_MAX = 20;
+
+export function newNotebookId(): string {
+  return `nb-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+}
+
+/** 補上「預設」並放在最前面 */
+export function withDefaultNotebook(list: Notebook[]): Notebook[] {
+  const fallback: Notebook = { id: DEFAULT_NOTEBOOK_ID, name: '預設', createdAt: new Date(0).toISOString() };
+  const first = list.find((n) => n.id === DEFAULT_NOTEBOOK_ID) ?? fallback;
+  return [first, ...list.filter((n) => n.id !== DEFAULT_NOTEBOOK_ID)];
+}
+
+/** 單字卡在哪幾本；舊的卡沒有這個欄位，算在「預設」 */
+export function wordNotebooks(card: WordCard): string[] {
+  return card.notebooks?.length ? card.notebooks : [DEFAULT_NOTEBOOK_ID];
+}
 
 function request<T>(req: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -168,6 +191,18 @@ export class LearningStore implements LearningStoreApi {
     await done(tx);
   }
 
+  async getNotebooks(): Promise<Notebook[]> {
+    const { store } = await this.store(SETTINGS, 'readonly');
+    const row = (await request(store.get(NOTEBOOKS_KEY))) as { value: Notebook[] } | undefined;
+    return withDefaultNotebook(row?.value ?? []);
+  }
+
+  async saveNotebooks(notebooks: Notebook[]): Promise<void> {
+    const { tx, store } = await this.store(SETTINGS, 'readwrite');
+    store.put({ key: NOTEBOOKS_KEY, value: notebooks });
+    await done(tx);
+  }
+
   async putCard(card: StudyCard): Promise<void> {
     const { tx, store } = await this.store(CARDS, 'readwrite');
     store.put(card);
@@ -211,12 +246,14 @@ export class LearningStore implements LearningStoreApi {
       cards: await this.listCards(),
       reviewLogs: await this.listReviewLogs(),
       settings: await this.getSettings(),
+      notebooks: await this.getNotebooks(),
     };
   }
 
   /**
    * replace：先清空再匯入。
    * merge：同 id 的卡片以檔案為準，其餘保留；同一張卡、同一時間的複習紀錄已經有了就跳過（同一個檔案匯入兩次不會重複）。
+   * 筆記本：replace 換成檔案裡的；merge 時同名的合成一本，「預設」對「預設」。
    * 回傳匯入的卡片數與實際新增的複習紀錄數。
    */
   async importAll(file: ExportFile, mode: 'replace' | 'merge'): Promise<{ cards: number; reviewLogs: number }> {
@@ -226,6 +263,8 @@ export class LearningStore implements LearningStoreApi {
     }
     const logKey = (log: ReviewLog) => `${log.cardId}|${log.reviewedAt}`;
     const existing = mode === 'merge' ? new Set((await this.listReviewLogs()).map(logKey)) : new Set<string>();
+    const { notebooks, remap } = mode === 'merge' ? mergeNotebooks(await this.getNotebooks(), file.notebooks ?? []) : { notebooks: withDefaultNotebook(file.notebooks ?? []), remap: new Map<string, string>() };
+    const known = new Set(notebooks.map((n) => n.id));
     const db = await this.open();
     const tx = db.transaction([CARDS, LOGS, SETTINGS], 'readwrite');
     const cards = tx.objectStore(CARDS);
@@ -234,7 +273,14 @@ export class LearningStore implements LearningStoreApi {
       cards.clear();
       logs.clear();
     }
-    for (const card of file.cards) cards.put(card);
+    for (const card of file.cards) {
+      if (card.kind !== 'word' || !card.notebooks) {
+        cards.put(card);
+        continue;
+      }
+      const ids = [...new Set(card.notebooks.map((id) => remap.get(id) ?? id).filter((id) => known.has(id)))];
+      cards.put({ ...card, notebooks: ids.length ? ids : [DEFAULT_NOTEBOOK_ID] });
+    }
     let added = 0;
     for (const log of file.reviewLogs) {
       if (existing.has(logKey(log))) continue;
@@ -244,9 +290,28 @@ export class LearningStore implements LearningStoreApi {
       added++;
     }
     tx.objectStore(SETTINGS).put({ key: SETTINGS_KEY, value: file.settings });
+    tx.objectStore(SETTINGS).put({ key: NOTEBOOKS_KEY, value: notebooks });
     await done(tx);
     return { cards: file.cards.length, reviewLogs: added };
   }
+}
+
+/** 合併匯入時的筆記本：同名的合成一本、「預設」對「預設」；檔案裡的 id 和現有的撞到就換一個 */
+function mergeNotebooks(current: Notebook[], incoming: Notebook[]) {
+  const notebooks = [...current];
+  const remap = new Map<string, string>();
+  for (const nb of incoming) {
+    if (nb.id === DEFAULT_NOTEBOOK_ID) continue;
+    const same = notebooks.find((n) => n.name === nb.name);
+    if (same) {
+      remap.set(nb.id, same.id);
+      continue;
+    }
+    const id = notebooks.some((n) => n.id === nb.id) ? newNotebookId() : nb.id;
+    remap.set(nb.id, id);
+    notebooks.push({ ...nb, id });
+  }
+  return { notebooks, remap };
 }
 
 /** 刪掉第一階段的「共用資料測試」資料庫 */

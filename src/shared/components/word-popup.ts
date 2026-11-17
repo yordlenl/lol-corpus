@@ -1,4 +1,4 @@
-// <lol-word-popup>：點英文單字後的查詞小視窗（音標、繁體釋義、收藏單字）。整頁只放一個。
+// <lol-word-popup>：點英文單字後的查詞小視窗（音標、繁體釋義、收藏單字到筆記本）。整頁只放一個。
 import { css, html, LitElement, nothing } from 'lit';
 import { collection } from '../collection.ts';
 import { wordCardId } from '../db.ts';
@@ -16,6 +16,9 @@ export class LolWordPopup extends LitElement {
     result: { state: true },
     failed: { state: true },
     saving: { state: true },
+    picking: { state: true },
+    newName: { state: true },
+    notice: { state: true },
   };
 
   static styles = [
@@ -63,6 +66,40 @@ export class LolWordPopup extends LitElement {
       .actions {
         margin-top: 12px;
       }
+      .notebooks {
+        display: grid;
+        gap: 6px;
+        margin: 8px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      .notebooks .collect {
+        width: 100%;
+        text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .new-notebook {
+        display: flex;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .new-notebook input {
+        flex: 1;
+        min-width: 0;
+        min-height: 36px;
+        box-sizing: border-box;
+        padding: 0 8px;
+        font: inherit;
+        color: inherit;
+        background: transparent;
+        border: 1px solid var(--lol-popup-border, var(--lol-line, #ccc));
+      }
+      .notice {
+        margin-top: 6px;
+        font-size: 0.85em;
+        color: var(--lol-popup-warn-text, #8a5a00);
+      }
     `,
   ];
 
@@ -70,6 +107,10 @@ export class LolWordPopup extends LitElement {
   declare result: LookupResult | null;
   declare failed: boolean;
   declare saving: boolean;
+  /** 正在挑要收進哪一本 */
+  declare picking: boolean;
+  declare newName: string;
+  declare notice: string;
 
   constructor() {
     super();
@@ -77,6 +118,9 @@ export class LolWordPopup extends LitElement {
     this.result = null;
     this.failed = false;
     this.saving = false;
+    this.picking = false;
+    this.newName = '';
+    this.notice = '';
   }
 
   private onOutside = (event: PointerEvent) => {
@@ -106,6 +150,9 @@ export class LolWordPopup extends LitElement {
     this.detail = detail;
     this.result = null;
     this.failed = false;
+    this.picking = false;
+    this.newName = '';
+    this.notice = '';
     try {
       const result = await lookupWord(detail.key);
       if (this.detail === detail) this.result = result;
@@ -123,19 +170,63 @@ export class LolWordPopup extends LitElement {
     if (card && this.detail) placeNear(card, this.detail.anchor);
   }
 
-  private async collect() {
+  private async collect(notebook: string) {
     const { detail, result } = this;
     if (!detail || !result) return;
     this.saving = true;
+    this.notice = '';
     try {
       await collection.addWord({
         word: detail.word,
         lemma: result.lemma,
+        notebook,
         ...(detail.source ? { context: { text: detail.text, source: detail.source } } : {}),
       });
+    } catch (error) {
+      this.notice = (error as Error).message;
     } finally {
       this.saving = false;
     }
+  }
+
+  /** 新增一本筆記本，並把這個字收進去 */
+  private async createAndCollect(event: Event) {
+    event.preventDefault();
+    try {
+      const notebook = await collection.createNotebook(this.newName);
+      this.newName = '';
+      await this.collect(notebook.id);
+    } catch (error) {
+      this.notice = (error as Error).message;
+    }
+  }
+
+  private notebookPicker(lemma: string) {
+    const inside = collection.notebooksOf(wordCardId(lemma));
+    return html`
+      <ul class="notebooks" aria-label="收進哪一本筆記本">
+        ${collection.notebooks().map((nb) => {
+          const has = inside.includes(nb.id);
+          return html`<li>
+            <button class="collect notebook" type="button" ?disabled=${has || this.saving} @click=${() => this.collect(nb.id)}>
+              ${has ? '✓ ' : '＋ '}${nb.name}
+            </button>
+          </li>`;
+        })}
+      </ul>
+      <form class="new-notebook" @submit=${this.createAndCollect}>
+        <input
+          type="text"
+          maxlength="20"
+          placeholder="新筆記本名稱"
+          aria-label="新筆記本名稱"
+          .value=${this.newName}
+          @input=${(e: InputEvent) => (this.newName = (e.target as HTMLInputElement).value)}
+        />
+        <button class="collect" type="submit" ?disabled=${this.saving}>＋ 新增筆記本</button>
+      </form>
+      ${this.notice ? html`<div class="notice">${this.notice}</div>` : nothing}
+    `;
   }
 
   private body() {
@@ -143,14 +234,15 @@ export class LolWordPopup extends LitElement {
     if (!this.result) return html`<div class="def">查詢中…</div>`;
     const { entry, lemma, surface } = this.result;
     if (!entry) return html`<div class="missing">辭典沒有收錄這個字</div>`;
-    const collected = collection.has(wordCardId(lemma));
+    const count = collection.notebooksOf(wordCardId(lemma)).length;
     return html`
       ${lemma !== surface ? html`<div class="lemma">原形：${lemma}</div>` : nothing}
       <div class="def">${entry.t ?? '（沒有中文釋義）'}</div>
       <div class="actions">
-        <button class="collect" type="button" ?disabled=${collected || this.saving} @click=${this.collect}>
-          ${collected ? '已收藏單字' : '＋ 收藏單字'}
+        <button class="collect" type="button" aria-expanded=${this.picking} @click=${() => (this.picking = !this.picking)}>
+          ${count ? `已收藏（${count} 本）` : '＋ 收藏單字'}
         </button>
+        ${this.picking ? this.notebookPicker(lemma) : nothing}
       </div>
     `;
   }
