@@ -12,7 +12,7 @@ describe('設定', () => {
     settings.addEventListener('change', () => changes++);
     await settings.setRow('zh_CN', false);
     expect(changes).toBe(1);
-    expect(settings.current.rows).toEqual({ en: true, zh_TW: true, zh_CN: false });
+    expect(settings.current.rows).toEqual({ en: true, zh_TW: true, zh_CN: false, ko: true });
     expect((await db.getSettings()).rows.zh_CN).toBe(false);
   });
 
@@ -23,6 +23,6 @@ describe('設定', () => {
     await settings.update({ speech: { ...settings.current.speech, rate: 'slow' } });
     await settings.update({ speech: { ...settings.current.speech, accent: 'en-GB' } });
     expect((await db.getSettings()).speech).toEqual({ accent: 'en-GB', rate: 'slow' });
-    expect(settings.current.rows).toEqual({ en: true, zh_TW: true, zh_CN: true });
+    expect(settings.current.rows).toEqual({ en: true, zh_TW: true, zh_CN: true, ko: true });
   });
 });

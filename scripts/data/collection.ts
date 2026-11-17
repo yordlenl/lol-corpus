@@ -17,7 +17,7 @@ import { SKIN_RARITY } from './client-ui.ts';
 import { CDRAGON } from './config.ts';
 import { toPlain, toRich } from './markup.ts';
 
-type Lang = keyof Tri;
+type Lang = 'en' | 'zh_TW' | 'zh_CN';
 type PerLang<T> = Record<Lang, T>;
 
 /** CommunityDragon 資料裡的圖片路徑（/lol-game-data/assets/...）換成可以直接載入的網址 */

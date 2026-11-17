@@ -1,4 +1,4 @@
-// <lol-trilingual>：同一段文字的英文、繁中、簡中三行，依設定個別顯示或隱藏。
+// <lol-trilingual>：同一段文字的英文、繁中、簡中三行，有官方韓文的再多一行韓文（漢諺混寫），依設定個別顯示或隱藏。
 import { css, html, LitElement, nothing, type PropertyValues } from 'lit';
 import { collection } from '../collection.ts';
 import { sentenceCardId } from '../db.ts';
@@ -10,6 +10,7 @@ import type {
   Lang,
   PracticeState,
   Rich,
+  RowLang,
   SentenceUnit,
   SourceRef,
   TextContext,
@@ -17,13 +18,15 @@ import type {
   WordEventDetail,
 } from '../types.ts';
 import { define } from './define.ts';
-import { renderRich } from './rich.ts';
+import { renderRich, renderRuby } from './rich.ts';
 import type { PickSentenceDetail } from './sentence-picker.ts';
 import { anchorOf } from './place.ts';
 import { themeStyles } from './styles.ts';
 
 export const LANGS: Lang[] = ['en', 'zh_TW', 'zh_CN'];
-const HTML_LANG: Record<Lang, string> = { en: 'en', zh_TW: 'zh-Hant-TW', zh_CN: 'zh-Hans-CN' };
+/** 畫面上的行：三種語言加韓文（韓文只顯示，不能點、不出題） */
+export const ROWS: RowLang[] = [...LANGS, 'ko'];
+const HTML_LANG: Record<RowLang, string> = { en: 'en', zh_TW: 'zh-Hant-TW', zh_CN: 'zh-Hans-CN', ko: 'ko' };
 
 export class LolTrilingual extends LitElement {
   static properties = {
@@ -66,6 +69,25 @@ export class LolTrilingual extends LitElement {
       .zh_CN {
         color: var(--lol-zh-cn, var(--lol-muted, inherit));
         font-size: var(--lol-zh-cn-size, 0.9em);
+      }
+      /* 韓文：漢字上面有一排小字（諺文），所以行距留大一點 */
+      .ko {
+        color: var(--lol-ko, var(--lol-zh-tw, inherit));
+        font-size: var(--lol-ko-size, 1em);
+        line-height: 2.15;
+      }
+      :host([compact]) .ko {
+        line-height: 1.9;
+      }
+      .ko ruby {
+        ruby-position: over;
+      }
+      .ko rt {
+        font-size: 0.62em;
+        font-weight: 400;
+        letter-spacing: 0;
+        color: var(--lol-ko-reading, var(--lol-muted, inherit));
+        user-select: none;
       }
       .w {
         cursor: pointer;
@@ -123,7 +145,7 @@ export class LolTrilingual extends LitElement {
   /** read 閱讀；practice 練習（第四階段實作挖空） */
   declare mode: 'read' | 'practice';
   /** 每一行後面的小標籤，例如「學習譯文」 */
-  declare badges: Partial<Record<Lang, string>> | undefined;
+  declare badges: Partial<Record<RowLang, string>> | undefined;
   declare source: SourceRef | undefined;
   declare wordsClickable: boolean;
   declare compact: boolean;
@@ -215,7 +237,8 @@ export class LolTrilingual extends LitElement {
 
   render() {
     if (!this.text) return nothing;
-    const visible = LANGS.filter((lang) => settings.current.rows[lang]);
+    // 韓文不是每段文字都有（台詞的韓文是空的、收藏的句子卡沒有這一欄），沒有就不佔一行
+    const visible = ROWS.filter((lang) => settings.current.rows[lang] && (lang !== 'ko' || Boolean(this.text!.ko?.length)));
     // 每一行用 white-space: pre-line 顯示換行，所以 <div> 裡不能有多餘的空白或換行
     const practicing = this.mode === 'practice' && this.practice;
     // 練習中英文一定要顯示；送出前單字不能點（避免查到答案）
@@ -229,7 +252,8 @@ export class LolTrilingual extends LitElement {
           : { clickable: canClick ? { context: this.context } : null, blanks, revealed: this.practice?.revealed };
       const listen = lang === 'en' && (canClick || practicing);
       const badge = this.badges?.[lang] ? html`<span class="badge">${this.badges[lang]}</span>` : nothing;
-      return html`<div class="row ${lang}" lang=${HTML_LANG[lang]} @click=${listen ? this.onClick : nothing}>${renderRich(this.text![lang], options)}${badge}</div>`;
+      const content = lang === 'ko' ? renderRuby(this.text!.ko!) : renderRich(this.text![lang], options);
+      return html`<div class="row ${lang}" lang=${HTML_LANG[lang]} @click=${listen ? this.onClick : nothing}>${content}${badge}</div>`;
     })}${this.tools()}`;
   }
 }

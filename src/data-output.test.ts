@@ -19,7 +19,7 @@ import type {
   Tri,
   Rich,
 } from './shared/types.ts';
-import { richToPlain } from './shared/text.ts';
+import { richToPlain, ruby, rubyParts } from './shared/text.ts';
 
 const PUBLIC = new URL('../public/', import.meta.url);
 const read = <T>(path: string): T => JSON.parse(readFileSync(new URL(`data/${path}`, PUBLIC), 'utf8')) as T;
@@ -65,7 +65,7 @@ describe('遊戲資料', () => {
 
   it('簡中的英雄名放在 name、稱號放在 title（已對調回來）', () => {
     const ahri = index.find((c) => c.id === 'Ahri')!;
-    expect(ahri.name).toEqual({ en: 'Ahri', zh_TW: '阿璃', zh_CN: '阿狸' });
+    expect(ahri.name).toMatchObject({ en: 'Ahri', zh_TW: '阿璃', zh_CN: '阿狸' });
     expect(ahri.title.zh_CN).toBe('九尾妖狐');
   });
 
@@ -165,6 +165,76 @@ describe('遊戲資料', () => {
     ];
     const missing = icons.filter((icon) => !existsSync(new URL(icon, PUBLIC)));
     expect(missing).toEqual([]);
+  });
+});
+
+describe('韓文（漢諺混寫，只顯示）', () => {
+  const parts = (text: Rich | undefined) => rubyParts(richToPlain(text ?? ''));
+  const koTexts = (): Rich[] => {
+    const out: Rich[] = [];
+    const walk = (v: unknown) => {
+      if (Array.isArray(v)) v.forEach(walk);
+      else if (v && typeof v === 'object') {
+        const t = v as { en?: unknown; zh_TW?: unknown; ko?: Rich };
+        if (t.en !== undefined && t.zh_TW !== undefined && t.ko !== undefined) out.push(t.ko);
+        else Object.values(v).forEach(walk);
+      }
+    };
+    walk([champions, index, items, runes, summoners, skinCards, chromas, collectibles]);
+    return out;
+  };
+
+  it('英雄的名字、稱號、技能都有韓文；裝備、符文、召喚師技能也有', () => {
+    for (const c of champions) {
+      expect(c.name.ko, c.id).toBeTruthy();
+      expect(c.title.ko, c.id).toBeTruthy();
+      expect(c.passive.description.ko, c.id).toBeTruthy();
+      for (const sp of c.spells) expect(sp.description.ko, `${c.id} ${sp.slot}`).toBeTruthy();
+    }
+    expect(items.filter((i) => i.name.ko).length).toBe(items.length);
+    expect(runes.trees.every((t) => t.name.ko && t.slots.flat().every((r) => r.name.ko && r.long.ko))).toBe(true);
+    expect(summoners.every((s) => s.name.ko && s.description.ko)).toBe(true);
+    expect(meta.counts.koreanTexts).toBeGreaterThan(20000);
+  });
+
+  it('英雄名是官方韓文原文，沒有被轉成漢字；稱號裡的漢字詞有轉', () => {
+    const lux = champions.find((c) => c.id === 'Lux')!;
+    expect(lux.name.ko).toBe('럭스');
+    expect(parts(lux.title.ko)).toEqual([['光明', '광명'], '의 ', ['少女', '소녀']]);
+    const leeSin = champions.find((c) => c.id === 'LeeSin')!;
+    expect(leeSin.name.ko).toBe('리 신');
+  });
+
+  it('台詞沒有官方韓文，不放', () => {
+    expect(champions.every((c) => c.quotes.every((q) => !q.text.ko))).toBe(true);
+  });
+
+  it('每個標註都是「漢字配同樣字數的諺文」，沒有殘缺的標註符號', () => {
+    let count = 0;
+    for (const text of koTexts()) {
+      const plain = richToPlain(text);
+      for (const part of rubyParts(plain)) {
+        if (typeof part === 'string') {
+          expect(part, plain).not.toMatch(/[\uFFF9-\uFFFB]/);
+          continue;
+        }
+        count++;
+        expect(part[0], plain).toMatch(/^\p{Script=Han}+$/u);
+        expect(part[1], plain).toMatch(/^[가-힣]+$/);
+        expect([...part[0]].length, plain).toBe(part[1].length);
+      }
+      // 有格式的文字：標註不會被切在兩個片段中間
+      if (typeof text !== 'string') for (const run of text) expect(rubyParts(typeof run === 'string' ? run : run[0]).join('')).not.toMatch(/[\uFFF9-\uFFFB]/);
+    }
+    expect(count).toBeGreaterThan(50000);
+  });
+
+  it('照遊戲裡的意思選字：再使用待機時間的「待機」、敵人的「敵」', () => {
+    const all = koTexts().map((t) => richToPlain(t)).join('\n');
+    expect(all).toContain(ruby('待機', '대기'));
+    expect(all).not.toContain(ruby('大氣', '대기'));
+    expect(all).toContain(ruby('敵', '적'));
+    expect(all).not.toContain(ruby('童顔', '동안'));
   });
 });
 

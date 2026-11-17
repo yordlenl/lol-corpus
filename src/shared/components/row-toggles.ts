@@ -1,12 +1,13 @@
-// <lol-row-toggles>：三行開關（英文、繁中、簡中），至少要留一行。語料庫導覽列和學習 App 設定頁共用。
+// <lol-row-toggles>：每一行的開關（英文、繁中、簡中、韓文）。英文、繁中、簡中至少要留一行（韓文不是每段文字都有，不算在內）。
+// 語料庫導覽列和學習 App 設定頁共用。
 // variant="nav"：放在上方導覽列時，長得像客戶端導覽列那排字（開著是亮的加底部光暈，關掉是暗的）。
 import { css, html, LitElement } from 'lit';
 import { corpusUrl } from '../data.ts';
 import { settings } from '../settings.ts';
-import type { Lang } from '../types.ts';
+import type { RowLang } from '../types.ts';
 import { define } from './define.ts';
 
-const LABELS: Record<Lang, string> = { en: '英文', zh_TW: '繁中', zh_CN: '簡中' };
+const LABELS: Record<RowLang, string> = { en: '英文', zh_TW: '繁中', zh_CN: '簡中', ko: '韓文' };
 
 export class LolRowToggles extends LitElement {
   static styles = css`
@@ -104,11 +105,11 @@ export class LolRowToggles extends LitElement {
 
   render() {
     const rows = settings.current.rows;
-    const visibleCount = Object.values(rows).filter(Boolean).length;
+    const visibleCount = [rows.en, rows.zh_TW, rows.zh_CN].filter(Boolean).length;
     if (this.variant === 'nav') this.style.setProperty('--highlight', `url(${corpusUrl('img/client/ui/nav-highlight.png')})`);
-    return html`${(Object.keys(LABELS) as Lang[]).map((lang) => {
+    return html`${(Object.keys(LABELS) as RowLang[]).map((lang) => {
       const on = rows[lang];
-      const locked = on && visibleCount === 1;
+      const locked = on && lang !== 'ko' && visibleCount === 1;
       return html`<button
         type="button"
         class=${on ? 'on' : ''}

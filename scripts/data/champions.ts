@@ -1,11 +1,11 @@
 // 英雄：名稱、稱號、被動、Q/W/E/R、皮膚名，再接上台詞。
-import type { Champion, ChampionSummary, Quote, Spell, Tri } from '../../src/shared/types.ts';
+import type { Champion, ChampionSummary, Quote, Spell, Lang } from '../../src/shared/types.ts';
 import type { DDChampion } from './ddragon-types.ts';
 import { toRich } from './markup.ts';
 
 const SLOTS = ['Q', 'W', 'E', 'R'] as const;
 
-export function summarize(c: Record<keyof Tri, DDChampion>): ChampionSummary {
+export function summarize(c: Record<Lang, DDChampion>): ChampionSummary {
   // 簡中語言包的 name 和 title 是對調的（name 放「九尾妖狐」、title 放「阿狸」），這裡換回來
   return {
     id: c.en.id,
@@ -18,7 +18,7 @@ export function summarize(c: Record<keyof Tri, DDChampion>): ChampionSummary {
 }
 
 export function buildChampion(
-  c: Record<keyof Tri, DDChampion>,
+  c: Record<Lang, DDChampion>,
   quotes: Quote[],
   onUnknownTag?: (tag: string) => void,
 ): Champion {

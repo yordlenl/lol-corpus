@@ -1,4 +1,4 @@
-// npm run data：下載三語遊戲資料、圖示、詞典，整理後寫到 public/data/ 和 public/img/。
+// npm run data：下載三語遊戲資料（加上韓文）、圖示、詞典，整理後寫到 public/data/ 和 public/img/。
 // 原始下載檔放在 .cache/（不進倉庫），重跑時不會重複下載。
 import { existsSync } from 'node:fs';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
@@ -24,6 +24,7 @@ import {
   ECDICT_LEMMA_URL,
   ECDICT_MIN_BYTES,
   IMG_DIR,
+  KO_LOCALE,
   LANGS,
   STRINGTABLE_LOCALE,
 } from './config.ts';
@@ -51,22 +52,23 @@ import { cutShopIcons, SHOP_ATLASES, type ShopAtlas } from './shop-icons.ts';
 import { cdragonAssetUrl, buildRunes } from './runes.ts';
 import { buildSummoners } from './summoners.ts';
 import { type QuotesFile, validateQuotes } from './quotes.ts';
+import { attachKo, createHanjaConverter } from './korean.ts';
 
-type Lang = keyof Tri;
+type Lang = 'en' | 'zh_TW' | 'zh_CN';
 
 const unknownTags = new Map<string, number>();
 const onUnknownTag = (tag: string) => unknownTags.set(tag, (unknownTags.get(tag) ?? 0) + 1);
 
-async function ddragon<T>(lang: Lang, file: string): Promise<T> {
-  const locale = DDRAGON_LOCALE[lang];
+async function ddragon<T>(lang: Lang | 'ko', file: string): Promise<T> {
+  const locale = lang === 'ko' ? KO_LOCALE.ddragon : DDRAGON_LOCALE[lang];
   return getJson<T>(
     `${DDRAGON}/cdn/${DDRAGON_VERSION}/data/${locale}/${file}`,
     join(CACHE_DIR, 'ddragon', DDRAGON_VERSION, locale, file),
   );
 }
 
-async function cdragon<T>(lang: Lang, file: string): Promise<T> {
-  const locale = CDRAGON_LOCALE[lang];
+async function cdragon<T>(lang: Lang | 'ko', file: string): Promise<T> {
+  const locale = lang === 'ko' ? KO_LOCALE.cdragon : CDRAGON_LOCALE[lang];
   return getJson<T>(`${CDRAGON}/${locale}/v1/${file}`, join(CACHE_DIR, 'cdragon', CDRAGON_VERSION, locale, file));
 }
 
@@ -91,6 +93,9 @@ async function perLang<T>(load: (lang: Lang) => Promise<T>): Promise<Record<Lang
   const [en, zh_TW, zh_CN] = await Promise.all(LANGS.map(load));
   return { en, zh_TW, zh_CN };
 }
+
+/** 韓文用：同一份三語資料，簡中那一格換成韓文（見 korean.ts） */
+const withKo = <T>(rec: Record<Lang, T>, ko: T): Record<Lang, T> => ({ en: rec.en, zh_TW: rec.zh_TW, zh_CN: ko });
 
 async function writeData(file: string, value: unknown) {
   const path = join(DATA_DIR, file);
@@ -137,6 +142,22 @@ async function main() {
     perLang((l) => clientTrans('trans-perks.json', l)),
   ]);
 
+  // 韓文（第四行）：同樣的官方檔案，韓文版
+  const ko = {
+    champions: (await ddragon<{ data: Record<string, DDChampion> }>('ko', 'championFull.json')).data,
+    items: (await ddragon<{ data: Record<string, DDItem> }>('ko', 'item.json')).data,
+    summoners: (await ddragon<{ data: Record<string, DDSummoner> }>('ko', 'summoner.json')).data,
+    runeTrees: await ddragon<DDRuneTree[]>('ko', 'runesReforged.json'),
+    perks: await cdragon<CDPerk[]>('ko', 'perks.json'),
+    perkStyles: await cdragon<CDPerkStyles>('ko', 'perkstyles.json'),
+    stringTable: await cdragonGame<StringTable>(`${KO_LOCALE.stringtable}/data/menu/en_us/lol.stringtable.json`),
+    skins: Object.values(await cdragon<Record<string, CDSkin>>('ko', 'skins.json')),
+    emotes: await cdragon<CDEmote[]>('ko', 'summoner-emotes.json'),
+    icons: await cdragon<CDIcon[]>('ko', 'summoner-icons.json'),
+    wards: await cdragon<CDWard[]>('ko', 'ward-skins.json'),
+    finishers: await cdragon<CDFinisher[]>('ko', 'nexusfinishers.json'),
+  };
+
   console.log('[2/5] 整理英雄、台詞、裝備、符文、召喚師技能…');
   const quotesFile = JSON.parse(await readFile(join(CONTENT_DIR, 'quotes.json'), 'utf8')) as QuotesFile;
   const championIds = Object.keys(championFull.en.data).sort();
@@ -154,18 +175,42 @@ async function main() {
   const ddSkinIds = new Map(championIds.map((id) => [id, new Set(championFull.en.data[id].skins.filter((sk) => sk.parentSkin == null).map((sk) => sk.id))]));
   const skinData = buildSkins(champions, ddSkinIds, cdSkins, onUnknownTag);
   for (const c of champions) c.skins = skinData.perChampion.get(c.id) ?? [];
-  const index: ChampionSummary[] = champions
-    .map((c) => summarize({ en: championFull.en.data[c.id], zh_TW: championFull.zh_TW.data[c.id], zh_CN: championFull.zh_CN.data[c.id] }))
-    .sort((a, b) => a.name.en.localeCompare(b.name.en));
-  await writeData('champions.json', index);
-  for (const c of champions) await writeData(`champions/${c.id}.json`, c);
+  const summaries = champions.map((c) => summarize({ en: championFull.en.data[c.id], zh_TW: championFull.zh_TW.data[c.id], zh_CN: championFull.zh_CN.data[c.id] }));
 
   const itemLocales = fillMissingDescriptions({ en: items.en.data, zh_TW: items.zh_TW.data, zh_CN: items.zh_CN.data }, itemBins, stringTables);
   const builtItems = buildItems(itemLocales, itemBins, stringTables, onUnknownTag);
-  await writeData('items.json', builtItems);
   const runes = buildRunes(runeTrees, perks, perkStyles, onUnknownTag);
-  await writeData('runes.json', runes);
   const spells = buildSummoners({ en: summoners.en.data, zh_TW: summoners.zh_TW.data, zh_CN: summoners.zh_CN.data }, onUnknownTag);
+
+  // 韓文：同一套整理程式再跑一次（簡中那一格換成韓文），再把韓文轉成漢諺混寫，接到上面每段文字的 ko
+  console.log('      韓文：斷詞、轉漢字…');
+  const noTag = () => {};
+  // Data Dragon 的簡中檔把名字和稱號放反了（champions.ts 有換回來），韓文檔沒放反，所以先換過去
+  const koChampion = (id: string): DDChampion => ({ ...ko.champions[id], name: ko.champions[id].title, title: ko.champions[id].name });
+  const koChampions = championIds.map((id) => buildChampion({ en: championFull.en.data[id], zh_TW: championFull.zh_TW.data[id], zh_CN: koChampion(id) }, [], noTag));
+  const koSkinData = buildSkins(koChampions, ddSkinIds, withKo(cdSkins, ko.skins), noTag);
+  for (const c of koChampions) c.skins = koSkinData.perChampion.get(c.id) ?? [];
+  const koSummaries = championIds.map((id) => summarize({ en: championFull.en.data[id], zh_TW: championFull.zh_TW.data[id], zh_CN: koChampion(id) }));
+  const koStringTables = withKo(stringTables, ko.stringTable);
+  const koItems = buildItems(fillMissingDescriptions({ en: items.en.data, zh_TW: items.zh_TW.data, zh_CN: ko.items }, itemBins, koStringTables), itemBins, koStringTables, noTag);
+  const koRunes = buildRunes(withKo(runeTrees, ko.runeTrees), withKo(perks, ko.perks), withKo(perkStyles, ko.perkStyles), noTag);
+  const koSpells = buildSummoners({ en: summoners.en.data, zh_TW: summoners.zh_TW.data, zh_CN: ko.summoners }, noTag);
+
+  const hanja = await createHanjaConverter(CACHE_DIR, championIds.map((id) => ko.champions[id].name));
+  const toMixed = (text: Rich) => hanja.convertRich(text);
+  let koTexts = attachKo(champions, koChampions, toMixed);
+  koTexts += attachKo(summaries, koSummaries, toMixed);
+  koTexts += attachKo(skinData.cards, koSkinData.cards, toMixed);
+  koTexts += attachKo(skinData.chromas, koSkinData.chromas, toMixed);
+  koTexts += attachKo(builtItems, koItems, toMixed);
+  koTexts += attachKo(runes, koRunes, toMixed);
+  koTexts += attachKo(spells, koSpells, toMixed);
+
+  const index: ChampionSummary[] = summaries.sort((a, b) => a.name.en.localeCompare(b.name.en));
+  await writeData('champions.json', index);
+  for (const c of champions) await writeData(`champions/${c.id}.json`, c);
+  await writeData('items.json', builtItems);
+  await writeData('runes.json', runes);
   await writeData('summoners.json', spells);
 
   // 收藏頁：造型格子、炫彩、表情、頭像、偵察守衛、終結特效、介面文字
@@ -173,6 +218,10 @@ async function main() {
   const profileIcons = buildIcons(cdIcons, onUnknownTag);
   const wards = buildWards(cdWards, onUnknownTag);
   const finishers = buildFinishers(cdFinishers, onUnknownTag);
+  koTexts += attachKo(emotes, buildEmotes(withKo(cdEmotes, ko.emotes), noTag), toMixed);
+  koTexts += attachKo(profileIcons, buildIcons(withKo(cdIcons, ko.icons), noTag), toMixed);
+  koTexts += attachKo(wards, buildWards(withKo(cdWards, ko.wards), noTag), toMixed);
+  koTexts += attachKo(finishers, buildFinishers(withKo(cdFinishers, ko.finishers), noTag), toMixed);
   await writeData('collection/skins.json', skinData.cards);
   await writeData('collection/chromas.json', skinData.chromas);
   await writeData('collection/emotes.json', emotes);
@@ -314,6 +363,7 @@ async function main() {
     finishers: finishers.length,
     icons: icons.size + shopIcons.size,
     dictWords: dict.meta.count,
+    koreanTexts: koTexts,
   };
   const meta: Meta = {
     schema: DATA_SCHEMA,
@@ -336,6 +386,12 @@ async function main() {
   console.log('最常出現但查不到的字：', report.unresolved.slice(0, 30).map((u) => `${u.word}(${u.count})`).join(' '));
   if (unknownTags.size) console.log('沒見過的標籤（內容照留、不加樣式）：', Object.fromEntries(unknownTags));
   if (simplified.size) console.log('⚠ 繁中欄位裡疑似簡體字：', Object.fromEntries(simplified));
+  // 漢字轉換的清單（放在 .cache/，給人工核對用）：轉了哪些詞、哪些名詞沒轉，都照出現次數排
+  const byCount = (m: Map<string, number>) => [...m].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${n}\t${k}`).join('\n');
+  await writeFile(join(CACHE_DIR, 'hanja-converted.txt'), byCount(hanja.stats.converted));
+  await writeFile(join(CACHE_DIR, 'hanja-kept.txt'), byCount(hanja.stats.kept));
+  const total = [...hanja.stats.converted.values()].reduce((a, b) => a + b, 0);
+  console.log(`韓文：${koTexts} 段；漢字詞 ${hanja.stats.converted.size} 種、共轉 ${total} 處（清單在 .cache/hanja-converted.txt）`);
   console.log(`耗時 ${((Date.now() - started) / 1000).toFixed(1)} 秒`);
 }
 

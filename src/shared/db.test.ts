@@ -46,15 +46,15 @@ describe('學習紀錄資料庫', () => {
 
   it('存設定、讀設定', async () => {
     const store = new LearningStore(new IDBFactory());
-    const saved = { rows: { en: true, zh_TW: false, zh_CN: true }, dailyNew: 30, speech: { accent: 'en-GB', rate: 'slow' } } as const;
+    const saved = { rows: { en: true, zh_TW: false, zh_CN: true, ko: false }, dailyNew: 30, speech: { accent: 'en-GB', rate: 'slow' } } as const;
     await store.saveSettings(saved);
     expect(await store.getSettings()).toEqual(saved);
   });
 
-  it('舊版存的設定沒有朗讀：補上預設的美式、正常速度', async () => {
+  it('舊版存的設定沒有朗讀、沒有韓文開關：補上預設的美式、正常速度，韓文預設開著', async () => {
     const store = new LearningStore(new IDBFactory());
     await store.saveSettings({ rows: { en: true, zh_TW: false, zh_CN: true }, dailyNew: 30 } as unknown as Settings);
-    expect(await store.getSettings()).toEqual({ rows: { en: true, zh_TW: false, zh_CN: true }, dailyNew: 30, speech: DEFAULT_SETTINGS.speech });
+    expect(await store.getSettings()).toEqual({ rows: { en: true, zh_TW: false, zh_CN: true, ko: true }, dailyNew: 30, speech: DEFAULT_SETTINGS.speech });
   });
 
   it('新增、查詢、依種類列出、刪除卡片', async () => {

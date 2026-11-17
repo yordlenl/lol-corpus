@@ -1,6 +1,6 @@
 {
   "name": "lol-corpus",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,6 +16,7 @@
     "csv-parse": "^7.0.3",
     "fake-indexeddb": "^6.2.6",
     "happy-dom": "^21.0.4",
+    "kiwi-nlp": "^0.24.1",
     "opencc-js": "^1.4.2",
     "typescript": "^7.0.2",
     "vite": "^8.3.5",

@@ -24,7 +24,7 @@ export const DB_VERSION = 1;
 export const FORMAT_VERSION = 1;
 
 export const DEFAULT_SETTINGS: Settings = {
-  rows: { en: true, zh_TW: true, zh_CN: true },
+  rows: { en: true, zh_TW: true, zh_CN: true, ko: true },
   dailyNew: 20,
   speech: { accent: 'en-US', rate: 'normal' },
 };

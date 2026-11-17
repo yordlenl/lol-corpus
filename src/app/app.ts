@@ -45,6 +45,7 @@ export class CorpusApp extends LightElement {
         ${this.meta ? html`<p>遊戲資料版本 ${this.meta.ddragon}・英雄 ${this.meta.counts.champions} 位・裝備 ${this.meta.counts.items} 件</p>` : nothing}
         <p>本站是非官方的學習用網站，未經 Riot Games 認可，也不代表 Riot Games 的立場。英雄聯盟的名稱、文字、圖示、圖片與語音的權利屬於 Riot Games, Inc.</p>
         <p>台詞轉錄與原聲來自 League of Legends Wiki（CC BY-SA 3.0），中文為學習譯文；音標與釋義來自 ECDICT。</p>
+        <p>韓文是 Riot 官方原文；上面的漢字是本站照詞典轉換的（官方沒有漢諺混寫版），可能有錯。斷詞用 Kiwi，漢字詞表來自 libhangul。</p>
         <p>網站版本 ${__APP_VERSION__}・${__COMMIT__}</p>
       </footer>
     </section>`;

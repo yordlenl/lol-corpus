@@ -1,6 +1,6 @@
 // 設定（三行開關等）。改了就存進資料庫，並通知所有元件重畫。
 import { DEFAULT_SETTINGS, type LearningStore } from './db.ts';
-import type { Lang, Settings, SettingsApi } from './types.ts';
+import type { RowLang, Settings, SettingsApi } from './types.ts';
 
 export class SettingsStore extends EventTarget implements SettingsApi {
   private value: Settings = structuredClone(DEFAULT_SETTINGS);
@@ -32,7 +32,7 @@ export class SettingsStore extends EventTarget implements SettingsApi {
     await this.store?.saveSettings(this.value);
   }
 
-  setRow(lang: Lang, visible: boolean) {
+  setRow(lang: RowLang, visible: boolean) {
     return this.update({ rows: { ...this.value.rows, [lang]: visible } });
   }
 }

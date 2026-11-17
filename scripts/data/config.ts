@@ -28,6 +28,12 @@ export const CDRAGON_LOCALE = { en: 'default', zh_TW: 'zh_tw', zh_CN: 'zh_cn' } 
 /** 遊戲文字檔的資料夾（三種語言的檔案都放在各自資料夾的 menu/en_us/ 底下） */
 export const STRINGTABLE_LOCALE = { en: 'en_us', zh_TW: 'zh_tw', zh_CN: 'zh_cn' } as const;
 
+/** 韓文（第四行）：官方韓文語言檔的資料夾名稱 */
+export const KO_LOCALE = { ddragon: 'ko_KR', cdragon: 'ko_kr', stringtable: 'ko_kr' } as const;
+/** 漢諺混寫用：Kiwi 斷詞的語言模型（Apache-2.0）、libhangul 的漢字詞表（BSD） */
+export const KIWI_MODEL_URL = 'https://github.com/bab2min/Kiwi/releases/download/v0.24.1/kiwi_model_v0.24.1_base.tgz';
+export const HANJA_DICT_URL = 'https://raw.githubusercontent.com/libhangul/libhangul/main/data/hanja/hanja.txt';
+
 export const ECDICT_CSV_URL = 'https://unpkg.com/ecdict@0.0.4/assets/ecdict.csv';
 export const ECDICT_LEMMA_URL = 'https://unpkg.com/ecdict@0.0.4/assets/lemma.en.txt';
 export const ECDICT_MIN_BYTES = 60 * 1024 * 1024;

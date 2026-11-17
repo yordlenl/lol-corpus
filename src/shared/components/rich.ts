@@ -1,7 +1,7 @@
 // 把有格式的文字畫出來；英文那一行把單字切出來，可以點。練習模式時把指定的字換成空格。
 import { html, nothing, type TemplateResult } from 'lit';
 import { isClickable } from '../dict.ts';
-import { segment } from '../text.ts';
+import { rubyParts, segment } from '../text.ts';
 import type { PracticeBlank, Rich, TextContext, TextStyle } from '../types.ts';
 
 const runsOf = (rich: Rich): Array<[string, TextStyle | null]> =>
@@ -22,6 +22,12 @@ function blank(b: PracticeBlank, revealed: boolean): TemplateResult {
   }
   if (b.result === 'right') return html`<span class="blank right">${b.value}</span>`;
   return html`<span class="blank wrong">${b.value ? html`<s>${b.value}</s> ` : nothing}<span class="answer">${b.answer}</span></span>`;
+}
+
+/** 韓文（漢諺混寫）：漢字上面用小字標原本的諺文 */
+export function renderRuby(rich: Rich): TemplateResult {
+  const parts = (text: string) => rubyParts(text).map((part) => (typeof part === 'string' ? part : html`<ruby>${part[0]}<rt>${part[1]}</rt></ruby>`));
+  return html`${runsOf(rich).map(([text, style]) => (style ? html`<span class="s-${style}">${parts(text)}</span>` : html`${parts(text)}`))}`;
 }
 
 export function renderRich(rich: Rich, options: EnglishOptions | null = null): TemplateResult {

@@ -6,11 +6,19 @@
 /** 三行對照的語言 */
 export type Lang = 'en' | 'zh_TW' | 'zh_CN';
 
+/** 畫面上可以開關的行：三種語言加韓文 */
+export type RowLang = Lang | 'ko';
+
 /** 同一段文字的三種語言版本 */
 export interface Tri<T = string> {
   en: T;
   zh_TW: T;
   zh_CN: T;
+  /**
+   * 韓文（漢諺混寫）：官方韓文裡的漢字詞換成漢字，漢字和上面的諺文用 U+FFF9、U+FFFA、U+FFFB 包起來。
+   * 只拿來顯示；沒有官方韓文的地方（台詞、收藏的句子卡）沒有這一欄。
+   */
+  ko?: T;
 }
 
 /** 遊戲文字裡保留下來的少數樣式 */
@@ -417,7 +425,7 @@ export interface SpeechSettings {
 }
 
 export interface Settings {
-  rows: Record<Lang, boolean>;
+  rows: Record<RowLang, boolean>;
   dailyNew: number;
   speech: SpeechSettings;
 }
@@ -520,7 +528,7 @@ export interface LearningStoreApi {
 export interface SettingsApi extends EventTarget {
   readonly current: Settings;
   update(patch: Partial<Settings>): Promise<void>;
-  setRow(lang: Lang, visible: boolean): Promise<void>;
+  setRow(lang: RowLang, visible: boolean): Promise<void>;
   /** 重新從資料庫讀（例如匯入備份之後） */
   reload(): Promise<void>;
 }

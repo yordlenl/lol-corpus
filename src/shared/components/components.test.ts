@@ -15,7 +15,7 @@ beforeAll(async () => {
 });
 afterEach(async () => {
   document.body.replaceChildren();
-  await settings.update({ rows: { en: true, zh_TW: true, zh_CN: true } });
+  await settings.update({ rows: { en: true, zh_TW: true, zh_CN: true, ko: true } });
 });
 
 async function mount<K extends 'lol-trilingual' | 'lol-quote'>(tag: K, props: Partial<HTMLElementTagNameMap[K]>) {
@@ -96,6 +96,69 @@ describe('<lol-trilingual>', () => {
     document.addEventListener('lol-word', (e) => (detail = (e as CustomEvent<WordEventDetail>).detail), { once: true });
     el.shadowRoot!.querySelector<HTMLElement>('.w')!.click();
     expect(detail).toMatchObject({ word: 'throws', key: 'throws', sentence: 'Ahri throws the orb.', context: 'body' });
+  });
+});
+
+describe('韓文那一行（漢諺混寫）', () => {
+  const R = (base: string, reading: string) => `\uFFF9${base}\uFFFA${reading}\uFFFB`;
+  const withKo = { en: 'Deals magic damage.', zh_TW: '造成魔法傷害。', zh_CN: '造成魔法伤害。', ko: [`${R('魔法', '마법')} `, [`${R('被害', '피해')}`, 'magic'], '를 입힙니다.'] as const };
+
+  async function mount(text: unknown) {
+    const el = Object.assign(document.createElement('lol-trilingual'), { text });
+    document.body.append(el);
+    await el.updateComplete;
+    return el;
+  }
+
+  it('有官方韓文就多一行：漢字上面標諺文，樣式照留', async () => {
+    const el = await mount(withKo);
+    expect(rowsOf(el)).toEqual(['en', 'zh_TW', 'zh_CN', 'ko']);
+    const row = el.shadowRoot!.querySelector('.row.ko')!;
+    expect(row.getAttribute('lang')).toBe('ko');
+    const rubies = [...row.querySelectorAll('ruby')].map((r) => {
+      const reading = r.querySelector('rt')!.textContent!;
+      return [r.textContent!.replace(reading, ''), reading];
+    });
+    expect(rubies).toEqual([['魔法', '마법'], ['被害', '피해']]);
+    expect(row.querySelector('.s-magic ruby')).not.toBeNull();
+    // 畫面上沒有標註用的特殊符號
+    expect(row.textContent).not.toMatch(/[\uFFF9-\uFFFB]/);
+    // 韓文只顯示，不能點
+    expect(row.querySelector('.w')).toBeNull();
+  });
+
+  it('沒有韓文的文字（句子卡沒有這一欄、台詞的韓文是空的）就沒有那一行', async () => {
+    const el = await mount({ en: 'Hello.', zh_TW: '你好。', zh_CN: '你好。' });
+    expect(rowsOf(el)).toEqual(['en', 'zh_TW', 'zh_CN']);
+    const quote = await mount({ en: 'Hello.', zh_TW: '你好。', zh_CN: '你好。', ko: '' });
+    expect(rowsOf(quote)).toEqual(['en', 'zh_TW', 'zh_CN']);
+  });
+
+  it('關掉韓文開關就不顯示；開關再打開就回來', async () => {
+    const el = await mount(withKo);
+    await settings.setRow('ko', false);
+    await el.updateComplete;
+    expect(rowsOf(el)).toEqual(['en', 'zh_TW', 'zh_CN']);
+    await settings.setRow('ko', true);
+    await el.updateComplete;
+    expect(rowsOf(el)).toContain('ko');
+  });
+
+  it('開關：韓文可以隨意開關；英文、繁中、簡中至少留一行（韓文不算）', async () => {
+    await import('./row-toggles.ts');
+    await settings.update({ rows: { en: true, zh_TW: false, zh_CN: false, ko: true } });
+    const toggles = document.createElement('lol-row-toggles');
+    document.body.append(toggles);
+    await toggles.updateComplete;
+    const buttons = [...toggles.shadowRoot!.querySelectorAll('button')];
+    expect(buttons.map((b) => [b.textContent, b.classList.contains('on'), b.disabled])).toEqual([
+      ['英文', true, true],
+      ['繁中', false, false],
+      ['簡中', false, false],
+      ['韓文', true, false],
+    ]);
+    buttons[3].click();
+    await vi.waitFor(() => expect(settings.current.rows.ko).toBe(false));
   });
 });
 
@@ -190,12 +253,12 @@ describe('<lol-client-nav>、<lol-client-tabs>（語料庫和學習 App 共用�
     await toggles.updateComplete;
     expect(toggles.getAttribute('variant')).toBe('nav');
     const buttons = [...toggles.shadowRoot!.querySelectorAll('button')];
-    expect(buttons.map((b) => b.textContent)).toEqual(['英文', '繁中', '簡中']);
+    expect(buttons.map((b) => b.textContent)).toEqual(['英文', '繁中', '簡中', '韓文']);
     expect(buttons.every((b) => b.classList.contains('on'))).toBe(true);
     buttons[2].click();
     await vi.waitFor(() => expect(settings.current.rows.zh_CN).toBe(false));
     await toggles.updateComplete;
-    expect(toggles.shadowRoot!.querySelectorAll('button.on')).toHaveLength(2);
+    expect(toggles.shadowRoot!.querySelectorAll('button.on')).toHaveLength(3);
     await settings.setRow('zh_CN', true);
   });
 

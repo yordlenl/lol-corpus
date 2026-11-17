@@ -1,5 +1,5 @@
 // 裝備：只留召喚峽谷可購買的，去掉其他模式的重複版本，再加上官方的分區和職業。
-import type { Item, ItemRole, ItemTier, Tri } from '../../src/shared/types.ts';
+import type { Item, ItemRole, ItemTier, Lang, Tri } from '../../src/shared/types.ts';
 import { SR_MAP_ID } from './config.ts';
 import type { CDItemBin, DDItem, StringTable } from './ddragon-types.ts';
 import { toPlain, toRich } from './markup.ts';
@@ -139,10 +139,10 @@ const descriptionKey = (id: string) => `generatedtip_item_${id}_externaldescript
  * 改用遊戲文字檔裡的官方描述補上，三種語言都補。回傳補好的新資料，不改原本的。
  */
 export function fillMissingDescriptions(
-  locales: Record<keyof Tri, Record<string, DDItem>>,
+  locales: Record<Lang, Record<string, DDItem>>,
   bins: Record<string, CDItemBin>,
-  tables: Record<keyof Tri, StringTable>,
-): Record<keyof Tri, Record<string, DDItem>> {
+  tables: Record<Lang, StringTable>,
+): Record<Lang, Record<string, DDItem>> {
   const out = { en: { ...locales.en }, zh_TW: { ...locales.zh_TW }, zh_CN: { ...locales.zh_CN } };
   for (const [id, item] of Object.entries(locales.en)) {
     if (item.description || id.length > 4 || !isShopItem({ ...item, description: '-' })) continue;
@@ -196,9 +196,9 @@ export function findUpgrades(items: Record<string, DDItem>, shopIds: string[]): 
 }
 
 export function buildItems(
-  locales: Record<keyof Tri, Record<string, DDItem>>,
+  locales: Record<Lang, Record<string, DDItem>>,
   bins: Record<string, CDItemBin>,
-  tables: Record<keyof Tri, StringTable>,
+  tables: Record<Lang, StringTable>,
   onUnknownTag?: (tag: string) => void,
 ): Item[] {
   const shopIds = selectItemIds(locales.en);

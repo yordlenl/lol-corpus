@@ -1,10 +1,10 @@
 // 召喚師技能：只留召喚峽谷（CLASSIC 模式）能用的。
-import type { SummonerSpell, Tri } from '../../src/shared/types.ts';
+import type { SummonerSpell, Lang } from '../../src/shared/types.ts';
 import type { DDSummoner } from './ddragon-types.ts';
 import { toRich } from './markup.ts';
 
 export function buildSummoners(
-  locales: Record<keyof Tri, Record<string, DDSummoner>>,
+  locales: Record<Lang, Record<string, DDSummoner>>,
   onUnknownTag?: (tag: string) => void,
 ): SummonerSpell[] {
   return Object.values(locales.en)

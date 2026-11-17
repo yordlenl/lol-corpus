@@ -1,5 +1,5 @@
 // 符文：系、排、符文的層級照遊戲；屬性碎片來自 CommunityDragon。
-import type { RuneData, StatShardRow, Tri } from '../../src/shared/types.ts';
+import type { RuneData, StatShardRow, Lang } from '../../src/shared/types.ts';
 import type { CDPerk, CDPerkStyles, DDRuneTree } from './ddragon-types.ts';
 import { toPlain, toRich } from './markup.ts';
 
@@ -11,13 +11,13 @@ export function cdragonAssetUrl(cdragonBase: string, iconPath: string): string {
 }
 
 export function buildRunes(
-  trees: Record<keyof Tri, DDRuneTree[]>,
-  perks: Record<keyof Tri, CDPerk[]>,
-  styles: Record<keyof Tri, CDPerkStyles>,
+  trees: Record<Lang, DDRuneTree[]>,
+  perks: Record<Lang, CDPerk[]>,
+  styles: Record<Lang, CDPerkStyles>,
   onUnknownTag?: (tag: string) => void,
 ): RuneData {
-  const treeIn = (lang: keyof Tri, id: number) => trees[lang].find((t) => t.id === id)!;
-  const runeIn = (lang: keyof Tri, treeId: number, slot: number, runeId: number) =>
+  const treeIn = (lang: Lang, id: number) => trees[lang].find((t) => t.id === id)!;
+  const runeIn = (lang: Lang, treeId: number, slot: number, runeId: number) =>
     treeIn(lang, treeId).slots[slot].runes.find((r) => r.id === runeId)!;
 
   const builtTrees = trees.en.map((tree) => ({
@@ -50,8 +50,8 @@ export function buildRunes(
   }));
 
   // 屬性碎片的三排在每個系都一樣，取第一個系的
-  const statSlots = (lang: keyof Tri) => styles[lang].styles[0].slots.filter((s) => s.type === 'kStatMod');
-  const perkIn = (lang: keyof Tri, id: number) => perks[lang].find((p) => p.id === id)!;
+  const statSlots = (lang: Lang) => styles[lang].styles[0].slots.filter((s) => s.type === 'kStatMod');
+  const perkIn = (lang: Lang, id: number) => perks[lang].find((p) => p.id === id)!;
   const shards: StatShardRow[] = statSlots('en').map((slot, row) => ({
     label: { en: slot.slotLabel, zh_TW: statSlots('zh_TW')[row].slotLabel, zh_CN: statSlots('zh_CN')[row].slotLabel },
     shards: slot.perks.map((id) => {
