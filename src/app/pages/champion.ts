@@ -1,5 +1,5 @@
-// 收藏 → 英雄 → 一位英雄：左上角名字和稱號，三個子欄目：
-// 技能（純色背景，點圖示看那一招的三行說明）、台詞（選用／禁用）、造型（大圖、左右切換、故事介紹）。
+// 收藏 → 英雄 → 一位英雄：照客戶端的英雄頁，整頁英雄大圖當背景，左上角斜角名牌（名字和稱號），三個子欄目：
+// 技能（大圖壓暗，點圖示看那一招的三行說明）、台詞（選用／禁用）、造型（大圖、左右切換、故事介紹）。
 import { html, nothing } from 'lit';
 import { corpusUrl, loadChampion } from '../../shared/index.ts';
 import type { Ability, Champion, Skin, SourceRef, Spell } from '../../shared/types.ts';
@@ -85,7 +85,7 @@ export class PageChampion extends LightElement {
             aria-label=${`${label} ${a.name.zh_TW}`}
             @click=${() => (this.ability = i - 1)}
           >
-            <img src=${corpusUrl(a.icon)} alt="" width="64" height="64" />
+            <img src=${corpusUrl(a.icon)} alt="" width="72" height="72" />
             <span class="ability-key">${label}</span>
           </button>`,
         )}
@@ -153,13 +153,17 @@ export class PageChampion extends LightElement {
     if (this.error) return html`<p class="notice">找不到這位英雄的資料。</p>`;
     const c = this.champion;
     if (!c) return html`<p class="notice">載入中…</p>`;
-    return html`<div class="champion-detail" data-section=${this.section}>
+    return html`<div class="champion-detail" data-section=${this.section} style="--splash:url(${championSplash(c.id)})">
       <header class="champion-bar">
-        <a class="champion-back" href=${collectionHref('champions')} aria-label="回英雄列表">‹</a>
-        <img class="champion-bar-icon" src=${corpusUrl(c.icon)} alt="" width="48" height="48" />
-        <div class="champion-bar-names">
-          <div class="champion-bar-name">${c.name.zh_TW}<span lang="en">${c.name.en}</span></div>
-          <div class="champion-bar-title">${c.title.zh_TW}<span lang="en">${c.title.en}</span></div>
+        <div class="champion-plate-frame">
+          <div class="champion-plate">
+            <a class="champion-back" href=${collectionHref('champions')} aria-label="回英雄列表">‹</a>
+            <img class="champion-bar-icon" src=${corpusUrl(c.icon)} alt="" width="52" height="52" />
+            <div class="champion-bar-names">
+              <div class="champion-bar-name">${c.name.zh_TW}<span lang="en">${c.name.en}</span></div>
+              <div class="champion-bar-title">${c.title.zh_TW}<span lang="en">${c.title.en}</span></div>
+            </div>
+          </div>
         </div>
         <nav class="champion-sections">
           ${SECTIONS.map(

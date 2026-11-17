@@ -84,6 +84,19 @@ describe('英雄頁', () => {
     expect([...page.querySelectorAll('.champion-section')].map((a) => a.textContent)).toEqual(['技能', '台詞', '造型']);
   });
 
+  it('照客戶端：整頁英雄大圖當背景，左上角名牌有返回、名字和稱號', async () => {
+    const page = await mountChampion('skills');
+    const detail = page.querySelector<HTMLElement>('.champion-detail')!;
+    expect(detail.dataset.section).toBe('skills');
+    expect(detail.getAttribute('style')).toMatch(/--splash:url\(.+Ahri_0\.jpg\)/);
+    const plate = page.querySelector('.champion-bar .champion-plate')!;
+    expect(plate.querySelector('.champion-back')?.getAttribute('href')).toBe('#/collection/champions');
+    expect(plate.querySelector('.champion-bar-name')?.textContent).toContain('Ahri');
+    expect(plate.querySelector('.champion-bar-title')).not.toBeNull();
+    // 子欄目在名牌外面（名牌右邊）
+    expect(plate.querySelector('.champion-section')).toBeNull();
+  });
+
   it('技能：一排五個圖示，點哪個就顯示那一招', async () => {
     const page = await mountChampion('skills');
     const icons = page.querySelectorAll<HTMLButtonElement>('.ability-icon');

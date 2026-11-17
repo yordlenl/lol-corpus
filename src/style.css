@@ -79,8 +79,8 @@ button {
 /* ---------- 客戶端：上方導覽列 ---------- */
 
 :root {
-  --nav-h: 64px;
-  --tabs-h: 52px;
+  --nav-h: 81px;
+  --tabs-h: 60px;
   /* 收藏裡一頁可用的高度（導覽列、欄目列以下） */
   --page-h: calc(100dvh - var(--nav-h) - var(--tabs-h) - env(safe-area-inset-top));
 }
@@ -356,41 +356,78 @@ button {
 /* ---------- 收藏 → 英雄 → 一位英雄 ---------- */
 
 .champion-detail {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
+  /* 整頁英雄大圖當背景（客戶端英雄頁的做法）；技能和台詞分頁會壓暗 */
+  background: var(--splash) center 20% / cover no-repeat, #010a13;
+}
+
+/* 技能、台詞：左邊壓得比較暗（字在左邊），右邊還看得到英雄 */
+.champion-detail:not([data-section='skins'])::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(1, 10, 19, 0.35) 0%, rgba(1, 10, 19, 0.55) 60%, rgba(1, 10, 19, 0.9) 100%),
+    linear-gradient(90deg, rgba(1, 10, 19, 0.93) 0%, rgba(1, 10, 19, 0.86) 45%, rgba(1, 10, 19, 0.5) 100%);
+  pointer-events: none;
 }
 
 .champion-bar {
+  position: relative;
+  z-index: 1;
   display: flex;
-  gap: 14px;
-  align-items: center;
-  padding: 8px 20px;
-  background: linear-gradient(90deg, rgba(1, 10, 19, 0.92), rgba(1, 10, 19, 0.6));
+  align-items: stretch;
+  min-height: 68px;
   border-top: 1px solid var(--gold-dark);
-  border-bottom: 1px solid var(--gold-dark);
+}
+
+/* 客戶端英雄頁左上角的名牌：深色底、右邊斜切，下緣和斜邊有一條金線 */
+.champion-plate-frame {
+  flex: none;
+  filter: drop-shadow(1.5px 1.5px 0 var(--gold-dark));
+}
+
+.champion-plate {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-width: 320px;
+  height: 100%;
+  padding: 8px 76px 8px 14px;
+  background: linear-gradient(90deg, #010a13 0%, rgba(1, 10, 19, 0.92) 100%);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 56px) 100%, 0 100%);
 }
 
 .champion-back {
+  padding: 0 4px;
   color: var(--gold);
-  font-size: 30px;
+  font-size: 34px;
   line-height: 1;
   text-decoration: none;
 }
 
 .champion-bar-icon {
   border: 1px solid var(--gold-dark);
+  border-radius: 50%;
 }
 
+/* 名字照客戶端：#f0e6d2、粗體、字距 0.05em；稱號是金色小字 */
 .champion-bar-name {
   color: var(--gold-light);
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.25;
 }
 
 .champion-bar-title {
-  color: #cdbe91;
-  font-size: 14px;
+  color: var(--gold);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
 }
 
 .champion-bar-name span,
@@ -399,22 +436,33 @@ button {
   color: #a09b8c;
   font-size: 13px;
   font-weight: 400;
+  letter-spacing: 0;
 }
 
+/* 子欄目在名牌右邊那一段的中間，字和收藏分頁一樣（18px、字距 0.1em、選中有底線） */
 .champion-sections {
+  flex: 1;
   display: flex;
-  gap: 8px;
-  margin-left: 40px;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  padding-right: 120px;
 }
 
 .champion-section {
-  padding: 10px 14px;
-  color: #a09b8c;
-  font-size: 17px;
+  padding: 8px 16px;
+  color: #cdbe91;
+  font-size: 18px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-decoration: none;
+  text-shadow: 0 1px 3px #000;
   border-bottom: 2px solid transparent;
+  transition: color 0.3s;
+}
+
+.champion-section:hover {
+  color: var(--gold-light);
 }
 
 .champion-section.on {
@@ -423,40 +471,48 @@ button {
 }
 
 .champion-body {
+  position: relative;
+  z-index: 1;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
 }
 
-/* 技能：純色背景，一排圖示，下面是選到那一招的說明 */
+/* 技能：一排圖示，下面是選到那一招的說明，疊在壓暗的大圖上 */
 .champion-skills {
   min-height: 100%;
-  padding: 24px 32px 32px;
-  background: #0a0f14;
+  padding: 28px 36px 32px;
 }
 
 .ability-icons {
   display: flex;
-  gap: 18px;
-  margin-bottom: 22px;
+  gap: 20px;
+  margin-bottom: 26px;
 }
 
+/* 圖示外框照客戶端：一般是暗灰框，選中是金色漸層框加光暈 */
 .ability-icon {
   position: relative;
   padding: 0;
-  background: none;
+  background: #010a13;
   border: 2px solid #3c3c41;
   cursor: pointer;
 }
 
 .ability-icon img {
   display: block;
-  filter: brightness(0.6);
+  filter: brightness(0.55) saturate(0.8);
+  transition: filter 0.2s;
+}
+
+.ability-icon:hover img {
+  filter: brightness(0.85);
 }
 
 .ability-icon.on {
   border-color: var(--gold);
-  box-shadow: 0 0 10px rgba(200, 170, 110, 0.5);
+  border-image: linear-gradient(to top, #785a28, #c89b3c 60%, #f0e6d2) 1;
+  box-shadow: 0 0 14px rgba(200, 170, 110, 0.55);
 }
 
 .ability-icon.on img {
@@ -467,10 +523,10 @@ button {
   position: absolute;
   right: -2px;
   bottom: -2px;
-  min-width: 22px;
-  padding: 0 4px;
+  min-width: 24px;
+  padding: 0 5px;
   color: var(--gold-light);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   background: #010a13;
   border: 1px solid var(--gold-dark);
@@ -480,11 +536,49 @@ button {
   max-width: 880px;
 }
 
+@media (max-width: 700px) {
+  .champion-bar {
+    flex-wrap: wrap;
+  }
+  .champion-sections {
+    padding-right: 0;
+  }
+  .ability-icons {
+    gap: 10px;
+  }
+  .ability-icon img {
+    width: 54px;
+    height: 54px;
+  }
+}
+
 .champion-quotes {
   display: grid;
   gap: 12px;
   max-width: 980px;
   padding: 20px 24px 32px;
+}
+
+/* 造型：選到的造型大圖鋪滿整頁，名牌和子欄目疊在大圖上面（上緣壓暗，字才清楚） */
+.champion-detail[data-section='skins'] {
+  background: #010a13;
+}
+
+.champion-detail[data-section='skins'] .champion-bar {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(1, 10, 19, 0.8) 0%, rgba(1, 10, 19, 0.45) 60%, rgba(1, 10, 19, 0) 100%);
+  pointer-events: none;
+}
+
+.champion-detail[data-section='skins'] .champion-bar > * {
+  pointer-events: auto;
+}
+
+.champion-detail[data-section='skins'] .skin-story {
+  top: 88px;
+  max-height: calc(100% - 280px);
 }
 
 /* 造型：大圖鋪滿，下方是名字、圓點和縮圖 */

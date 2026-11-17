@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { IDBFactory } from 'fake-indexeddb';
-import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { collection } from '../collection.ts';
 import { LearningStore, sentenceCardId } from '../db.ts';
 import { setWordlists } from '../dict.ts';
@@ -175,9 +175,28 @@ describe('<lol-client-nav>、<lol-client-tabs>（語料庫和學習 App 共用�
     expect(root.querySelector('.play')?.classList.contains('on')).toBe(true);
     expect(root.querySelector('.icon')?.getAttribute('href')).toMatch(/#\/collection\/champions$/);
     expect(root.querySelector('.icon.on')).toBeNull();
-    // 書包在最右邊（三行開關後面）
+    // 書包在最右邊（語言開關後面，中間隔一條金線）
     const order = [...root.querySelector('nav')!.children].map((el) => el.tagName.toLowerCase() === 'lol-row-toggles' ? 'toggles' : el.className.split(' ')[0]);
-    expect(order).toEqual(['logo', 'play', 'toggles', 'icons']);
+    expect(order).toEqual(['logo', 'play', 'toggles', 'rule', 'icons']);
+    // 左上角的圓形標誌回首頁；語言開關用導覽列文字的樣子
+    expect(root.querySelector('.logo')?.getAttribute('aria-label')).toBe('首頁');
+    expect(root.querySelector('lol-row-toggles')?.getAttribute('variant')).toBe('nav');
+  });
+
+  it('導覽列上的語言開關：長相換成導覽列文字，開關的功能一樣', async () => {
+    await import('./client-nav.ts');
+    const toggles = Object.assign(document.createElement('lol-row-toggles'), { variant: 'nav' as const });
+    document.body.append(toggles);
+    await toggles.updateComplete;
+    expect(toggles.getAttribute('variant')).toBe('nav');
+    const buttons = [...toggles.shadowRoot!.querySelectorAll('button')];
+    expect(buttons.map((b) => b.textContent)).toEqual(['英文', '繁中', '簡中']);
+    expect(buttons.every((b) => b.classList.contains('on'))).toBe(true);
+    buttons[2].click();
+    await vi.waitFor(() => expect(settings.current.rows.zh_CN).toBe(false));
+    await toggles.updateComplete;
+    expect(toggles.shadowRoot!.querySelectorAll('button.on')).toHaveLength(2);
+    await settings.setRow('zh_CN', true);
   });
 
   it('分頁照給的順序，選中的有底線；關閉鈕連到指定的地方', async () => {
